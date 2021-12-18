@@ -145,7 +145,7 @@ namespace MetaLib.VTank
 			Children.AddRange(children);
 		}
 
-		public CAll() : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV) { }
+		internal CAll() : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV) { }
 
         protected override void PopulateTable(VTTable table)
         {
@@ -191,7 +191,7 @@ namespace MetaLib.VTank
 			Children.AddRange(children);
 		}
 
-		public CAny() : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV) { }
+		internal CAny() : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV) { }
 
 		protected override void PopulateTable(VTTable table)
 		{
@@ -217,7 +217,7 @@ namespace MetaLib.VTank
 	{
 		public string MatchText { get; private set; }
 
-		public CChatMatch() : base(VTConditionType.ChatMatch)
+		internal CChatMatch() : base(VTConditionType.ChatMatch)
 		{
 		}
 
@@ -247,7 +247,7 @@ namespace MetaLib.VTank
 	{
 		public int Slots { get; private set; }
 
-		public CMainSlotsLE() : base(VTConditionType.MainSlotsLE) { }
+		internal CMainSlotsLE() : base(VTConditionType.MainSlotsLE) { }
 
 		public CMainSlotsLE(int slots) : this()
 		{
@@ -275,7 +275,7 @@ namespace MetaLib.VTank
 	{
 		public int Seconds { get; private set; }
 
-		public CSecsInStateGE() : base(VTConditionType.SecsInStateGE) { }
+		internal CSecsInStateGE() : base(VTConditionType.SecsInStateGE) { }
 
 		public CSecsInStateGE(int secs) : this()
 		{
@@ -326,7 +326,7 @@ namespace MetaLib.VTank
 
 		public int Count { get; private set; }
 
-		public CItemCountLE() : base(VTConditionType.ItemCountLE, TableTypeConstants.SCHEMA_kv) { }
+		internal CItemCountLE() : base(VTConditionType.ItemCountLE, TableTypeConstants.SCHEMA_kv) { }
 
 		public CItemCountLE(string itemName, int count) : this()
 		{
@@ -357,7 +357,7 @@ namespace MetaLib.VTank
 
 		public int Count { get; private set; }
 
-		public CItemCountGE() : base(VTConditionType.ItemCountGE, TableTypeConstants.SCHEMA_kv) { }
+		internal CItemCountGE() : base(VTConditionType.ItemCountGE, TableTypeConstants.SCHEMA_kv) { }
 
 		public CItemCountGE(string itemName, int count) : this()
 		{
@@ -390,7 +390,7 @@ namespace MetaLib.VTank
 
 		public double Distance { get; private set; }
 
-		public CMobsInDistanceName() : base(VTConditionType.MobsInDist_Name, TableTypeConstants.SCHEMA_kv) { }
+		internal CMobsInDistanceName() : base(VTConditionType.MobsInDist_Name, TableTypeConstants.SCHEMA_kv) { }
 
 		public CMobsInDistanceName(string monsterName, int count, double dist) : this()
 		{
@@ -425,7 +425,7 @@ namespace MetaLib.VTank
 
 		public double Distance { get; private set; }
 
-		public CMobsInDistancePriority() : base(VTConditionType.MobsInDist_Priority, TableTypeConstants.SCHEMA_kv) { }
+		internal CMobsInDistancePriority() : base(VTConditionType.MobsInDist_Priority, TableTypeConstants.SCHEMA_kv) { }
 
 		public CMobsInDistancePriority(int priority, int count, double dist) : this()
 		{
@@ -461,7 +461,7 @@ namespace MetaLib.VTank
 	{
 		public double Distance { get; private set; }
 
-		public CNoMobsInRange() : base(VTConditionType.NoMobsInDist, TableTypeConstants.SCHEMA_kv) { }
+		internal CNoMobsInRange() : base(VTConditionType.NoMobsInDist, TableTypeConstants.SCHEMA_kv) { }
 
 		public CNoMobsInRange(double distance) : this()
 		{
@@ -486,7 +486,7 @@ namespace MetaLib.VTank
 	{
 		public int Landblock { get; private set; }
 
-		public CLandblockE() : base(VTConditionType.BlockE) { }
+		internal CLandblockE() : base(VTConditionType.BlockE) { }
 
 		public CLandblockE(int landblock) : this()
 		{
@@ -515,7 +515,7 @@ namespace MetaLib.VTank
 	{
 		public int Landcell { get; private set; }
 
-		public CLandcellE() : base(VTConditionType.CellE) { }
+		internal CLandcellE() : base(VTConditionType.CellE) { }
 
 		public CLandcellE(int landcell) : this()
 		{
@@ -554,7 +554,7 @@ namespace MetaLib.VTank
 	{
 		public VTConditionWithTableData Condition { get; private set; }
 
-		public CNot() : base(VTConditionType.Not, TableTypeConstants.SCHEMA_KV) { }
+		internal CNot() : base(VTConditionType.Not, TableTypeConstants.SCHEMA_KV) { }
 
 		public CNot(VTConditionWithTableData notCond) : this()
 		{
@@ -578,7 +578,7 @@ namespace MetaLib.VTank
 	{
 		public int Seconds { get; private set; }
 
-		public CPSecsInStateGE() : base(VTConditionType.PSecsInStateGE) { }
+		internal CPSecsInStateGE() : base(VTConditionType.PSecsInStateGE) { }
 
 		public CPSecsInStateGE(int seconds) : this()
 		{
@@ -609,7 +609,7 @@ namespace MetaLib.VTank
 
 		public int Seconds { get; private set; }
 
-		public CSecsOnSpellGE() : base(VTConditionType.SecsOnSpellGE, TableTypeConstants.SCHEMA_kv) { }
+		internal CSecsOnSpellGE() : base(VTConditionType.SecsOnSpellGE, TableTypeConstants.SCHEMA_kv) { }
 
 		public CSecsOnSpellGE(int spellId, int seconds) : this()
 		{
@@ -637,7 +637,7 @@ namespace MetaLib.VTank
 	{
 		public int Burden { get; private set; }
 
-		public CBurdenPercentGE() : base(VTConditionType.BurdenPercentGE) { }
+		internal CBurdenPercentGE() : base(VTConditionType.BurdenPercentGE) { }
 
 		public CBurdenPercentGE(int burden) : this()
 		{
@@ -666,7 +666,7 @@ namespace MetaLib.VTank
 	{
 		public double Distance { get; private set; }
 
-		public CDistanceToRouteGE() : base(VTConditionType.DistanceToRouteGE, TableTypeConstants.SCHEMA_kv) { }
+		internal CDistanceToRouteGE() : base(VTConditionType.DistanceToRouteGE, TableTypeConstants.SCHEMA_kv) { }
 
 		public CDistanceToRouteGE(double distance) : this()
 		{
@@ -692,7 +692,7 @@ namespace MetaLib.VTank
 	{
 		public string Expr { get; private set; }
 
-		public CExpr() : base(VTConditionType.Expr, TableTypeConstants.SCHEMA_kv) { }
+		internal CExpr() : base(VTConditionType.Expr, TableTypeConstants.SCHEMA_kv) { }
 
 		public CExpr(string expr) : this()
 		{
@@ -719,7 +719,7 @@ namespace MetaLib.VTank
 
 		public string ColorIdList { get; private set; }
 
-		public CChatCapture() : base(VTConditionType.ChatCapture, TableTypeConstants.SCHEMA_kv) { }
+		internal CChatCapture() : base(VTConditionType.ChatCapture, TableTypeConstants.SCHEMA_kv) { }
 
 		public CChatCapture(string regex, String colorIds) : this()
 		{
@@ -746,9 +746,7 @@ namespace MetaLib.VTank
 
 	public static class VTConditionHelpers
     {
-
-
-		public static VTCondition NewCondition(this VTConditionType type, MetaContext metaContext)
+		internal static VTCondition NewCondition(this VTConditionType type, MetaContext metaContext)
 		{
 			switch (type)
 			{

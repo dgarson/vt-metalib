@@ -100,7 +100,7 @@ namespace MetaLib.VTank
 	{
 		public string State { get; private set; }
 
-		public ASetState() : base(VTActionType.SetState) { }
+		internal ASetState() : base(VTActionType.SetState) { }
 
 		public ASetState(string state) : this()
 		{
@@ -129,7 +129,7 @@ namespace MetaLib.VTank
 	{
 		public string Message { get; private set; }
 
-		public AChatCommand() : base(VTActionType.ChatCommand) { }
+		internal AChatCommand() : base(VTActionType.ChatCommand) { }
 
 		public AChatCommand(string message) : this()
 		{
@@ -158,7 +158,7 @@ namespace MetaLib.VTank
 	{
 		public List<VTAction> Actions { get; } = new List<VTAction>();
 
-		public AAll() : base(VTActionType.All, TableTypeConstants.SCHEMA_KV) { }
+		internal AAll() : base(VTActionType.All, TableTypeConstants.SCHEMA_KV) { }
 
 		public AAll(List<VTAction> actions) : this()
 		{
@@ -189,7 +189,7 @@ namespace MetaLib.VTank
 	{
 		public string Bytes { get; private set; }
 
-		public AEmbedNav() : base(VTActionType.EmbedNav) { }
+		internal AEmbedNav() : base(VTActionType.EmbedNav) { }
 
 		public AEmbedNav(byte[] bytes) : this()
 		{
@@ -225,7 +225,7 @@ namespace MetaLib.VTank
 		public string CallStateName { get; private set; }
 		public string ReturnToStateName { get; private set; }
 
-		public ACallState() : base(VTActionType.CallState, TableTypeConstants.SCHEMA_kv) { }
+		internal ACallState() : base(VTActionType.CallState, TableTypeConstants.SCHEMA_kv) { }
 
 		public ACallState(string callState, string returnState) : this()
 		{
@@ -258,7 +258,7 @@ namespace MetaLib.VTank
 	{
 		public string Expression { get; private set; }
 
-		public AExprAction() : base(VTActionType.Expr, TableTypeConstants.SCHEMA_kv) { }
+		internal AExprAction() : base(VTActionType.Expr, TableTypeConstants.SCHEMA_kv) { }
 
 		public AExprAction(string expr) : this()
 		{
@@ -282,7 +282,7 @@ namespace MetaLib.VTank
 	{
 		public string ChatExpression { get; private set; }
 
-		public AChatExpr() : base(VTActionType.ChatExpr, TableTypeConstants.SCHEMA_kv) { }
+		internal AChatExpr() : base(VTActionType.ChatExpr, TableTypeConstants.SCHEMA_kv) { }
 
 		public AChatExpr(string chatExpr) : this()
 		{
@@ -310,7 +310,7 @@ namespace MetaLib.VTank
 
 		public double Seconds { get; private set; }
 
-		public ASetWatchdog() : base(VTActionType.SetWatchdog, TableTypeConstants.SCHEMA_kv) { }
+		internal ASetWatchdog() : base(VTActionType.SetWatchdog, TableTypeConstants.SCHEMA_kv) { }
 
 		public ASetWatchdog(string stateName, double distance, double seconds) : this()
 		{
@@ -356,7 +356,7 @@ namespace MetaLib.VTank
 
 		public string VarName { get; private set; }
 
-		public AGetOpt() : base(VTActionType.GetOpt, TableTypeConstants.SCHEMA_kv) { }
+		internal AGetOpt() : base(VTActionType.GetOpt, TableTypeConstants.SCHEMA_kv) { }
 
 		public AGetOpt(string optionName, string varName) : this()
         {
@@ -386,7 +386,7 @@ namespace MetaLib.VTank
 
 		public string Expression { get; private set; }
 
-		public ASetOpt() : base(VTActionType.SetOpt, TableTypeConstants.SCHEMA_kv) { }
+		internal ASetOpt() : base(VTActionType.SetOpt, TableTypeConstants.SCHEMA_kv) { }
 
 		public ASetOpt(string optionName, string expr) : this()
 		{
@@ -416,7 +416,7 @@ namespace MetaLib.VTank
 
 		public string XmlBytes { get; private set; }
 
-		public ACreateView() : base(VTActionType.CreateView, TableTypeConstants.SCHEMA_kv) { }
+		internal ACreateView() : base(VTActionType.CreateView, TableTypeConstants.SCHEMA_kv) { }
 
 		public ACreateView(string viewName, string xmlBytes) : this()
 		{
@@ -444,7 +444,7 @@ namespace MetaLib.VTank
 	{
 		public string ViewName { get; private set; }
 
-		public ADestroyView() : base(VTActionType.DestroyView, TableTypeConstants.SCHEMA_kv) { }
+		internal ADestroyView() : base(VTActionType.DestroyView, TableTypeConstants.SCHEMA_kv) { }
 
 		public ADestroyView(string viewName) : this()
 		{
@@ -480,7 +480,7 @@ namespace MetaLib.VTank
 
 	public static class VTActionTypeExtensions
 	{
-		public static VTAction NewAction(this VTActionType type, MetaContext context)
+		internal static VTAction NewAction(this VTActionType type, MetaContext context)
 		{
 			switch (type)
 			{
