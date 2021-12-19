@@ -22,14 +22,14 @@ namespace VTMetaLib.VTank
         /// Shorthand for reading the associated data type for this encodable object and handing it off to the
         /// ReadFromData method, using the reader's MetaContext.
         /// </summary>
-        public void ReadDataFrom(MetaFile reader);
+        public void ReadDataFrom(LineReadable reader);
 
         /// <summary>
         /// Reads the data for this encodable object from a VTData value
         /// </summary>
         /// <param name="file">the file within which this encodable object is being read</param>
         /// <param name="data">the data for this encodable (already read beforehand)</param>
-        public void ReadFromData(MetaFile file, VTDataType data);
+        public void ReadFromData(LineReadable file, VTDataType data);
 
         /// <summary>
         /// Writes this encodable object to the given file builder, which may not conform to the standard VTData type primitives.
@@ -129,20 +129,20 @@ namespace VTMetaLib.VTank
 
         protected abstract void PopulateTable(VTTable table);
 
-        public void ReadDataFrom(MetaFile file)
+        public void ReadDataFrom(LineReadable file)
         {
             VTTable table = file.ReadSpecialTableWithExpectedColumns(GetType().Name, columnNames);
             ReadFromData(file, table);
         }
 
-        public void ReadFromData(MetaFile file, VTDataType data)
+        public void ReadFromData(LineReadable file, VTDataType data)
         {
             if (data.GetType() != typeof(VTTable))
                 throw file.MalformedFor($"Unexpected non-VTTable for Table-Encodable type {GetType().Name}, got {data.GetType().Name}");
             ReadFromTable(file, data as VTTable);
         }
 
-        protected abstract void ReadFromTable(MetaFile file, VTTable table);
+        protected abstract void ReadFromTable(LineReadable file, VTTable table);
 
         public void WriteTo(MetaFileBuilder writer)
         {
@@ -168,14 +168,14 @@ namespace VTMetaLib.VTank
             return new VTInteger(0);
         }
 
-        public void ReadDataFrom(MetaFile file)
+        public void ReadDataFrom(LineReadable file)
         {
             VTInteger val = file.ReadExpectedData(GetType(), typeof(VTInteger)) as VTInteger;
             ReadFromData(file, val);
 
         }
 
-        public void ReadFromData(MetaFile file, VTDataType data)
+        public void ReadFromData(LineReadable file, VTDataType data)
         {
             file.VerifyExpectedData(GetType(), data, (int)0);
         }

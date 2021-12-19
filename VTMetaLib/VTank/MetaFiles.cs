@@ -55,71 +55,19 @@ namespace VTMetaLib.VTank
         }
     }
 
-    public class MetaFile
+    public abstract class LineReadable
     {
-
         /// <summary>
         /// The meta name (filename without the 'met' extension)
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; protected set;  }
 
-        /// <summary>
-        /// The meta file path on the disk
-        /// </summary>
-        public string Path { get; private set; }
-
-        public bool HasPath
+        public virtual string GetSourceText()
         {
-            get
-            {
-                return !string.IsNullOrEmpty(Path);
-            }
+            return Name;
         }
 
-        public bool FileExists
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(Path) && File.Exists(Path);
-            }
-        }
-
-        /// <summary>
-        /// Flushes the current meta file contained in this object to the local filesystem. If the Path already exists, it will be overwritten, not appended to.
-        /// </summary>
-        public void FlushToDisk()
-        {
-            if (File.Exists(Path))
-                Loggers.WriterLog.Info($"Overwriting existing meta file while writing: {Path}");
-            Loggers.WriterLog.Info($"Writing meta to file: {Path}...");
-            using (StreamWriter writer = new StreamWriter(Path, false))
-            {
-                // simply write the current FileLines to the target path
-                foreach (var line in FileLines)
-                    writer.WriteLine(line);
-            }
-            Loggers.WriterLog.Info($"Finished writing meta file: {Path}");
-        }
-
-        /// <summary>
-        /// Returns the text that should be displayed when indicating the source file where an error occurred. If the path name was provided, then it will be
-        /// included, otherwise this will just return the meta name (in-memory building of metas?)
-        /// </summary>
-        /// <returns></returns>
-        public string GetSourceText()
-        {
-            return HasPath ? $"{Name} ({Path})" : Name;
-        }
-
-        /// <summary>
-        /// The meta file type that is being read from or written to
-        /// </summary>
-        public MetaFileType FileType { get; private set; }
-
-        /// <summary>
-        /// Ordered list of every line in the underlying file (or file to be written)
-        /// </summary>
-        public List<string> FileLines { get; } = new List<string>();
+        public abstract List<string> Lines { get; }
 
         /// <summary>
         /// Returns the current line that is being read from the file. If the end of the file has been
@@ -129,7 +77,7 @@ namespace VTMetaLib.VTank
         {
             get
             {
-                return LineNumber < FileLines.Count ? FileLines[LineNumber] : null;
+                return LineNumber < Lines.Count ? Lines[LineNumber] : null;
             }
         }
 
@@ -139,28 +87,12 @@ namespace VTMetaLib.VTank
 
         private string currentLine = null;
 
-        public MetaFile(MetaFileType fileType, string path, List<string> lines = null, string name = "")
-        {
-            FileType = fileType;
-            Name = string.IsNullOrEmpty(name) ? GetNameFromPath(path) : name;
-            Path = string.IsNullOrEmpty(path) ? null : path;
-            if (lines != null)
-                FileLines.AddRange(lines);
-        }
-
-        public static string GetNameFromPath(string path)
-        {
-            int lastSlash = path.LastIndexOfAny(new char[] {'\\', '/'});
-            string afterSlash = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
-            int lastDot = afterSlash.LastIndexOf('.');
-            return lastDot > 0 ? afterSlash.Substring(0, lastDot) : afterSlash;
-        }
 
         public string this[int index]
         {
             get
             {
-                return FileLines[index];
+                return Lines[index];
             }
         }
 
@@ -168,9 +100,9 @@ namespace VTMetaLib.VTank
         {
             if (LineNumber == 0)
                 return;
-            
+
             LineNumber--;
-            currentLine = FileLines[LineNumber];
+            currentLine = Lines[LineNumber];
             Column = 0;
         }
 
@@ -184,15 +116,15 @@ namespace VTMetaLib.VTank
                 return currentLine;
             }
 
-            if (LineNumber >= FileLines.Count)
+            if (LineNumber >= Lines.Count)
                 return null;
 
             if (currentLine == null)
-                currentLine = FileLines[0];
+                currentLine = Lines[0];
             else
             {
                 LineNumber++;
-                currentLine = LineNumber < FileLines.Count ? FileLines[LineNumber] : null;
+                currentLine = LineNumber < Lines.Count ? Lines[LineNumber] : null;
             }
             Column = 0;
 
@@ -205,9 +137,9 @@ namespace VTMetaLib.VTank
         /// </summary>
         public string GetCurrentLineOrNull()
         {
-            if (currentLine == null && LineNumber < FileLines.Count)
+            if (currentLine == null && LineNumber < Lines.Count)
                 return ReadNextLine();
-            else if (LineNumber >= FileLines.Count)
+            else if (LineNumber >= Lines.Count)
                 return null;
             else
                 return currentLine;
@@ -225,22 +157,22 @@ namespace VTMetaLib.VTank
         {
             List<string> prevLines = new List<string>();
             int lineNum = LineNumber;
-            if (lineNum == FileLines.Count)
-                lineNum = FileLines.Count - 1;
+            if (lineNum == Lines.Count)
+                lineNum = Lines.Count - 1;
 
             if (lineNum >= 0)
             {
                 if (highlightCurrentLine)
-                    prevLines.Add(">>" + Loggers.Indent(FileLines[lineNum], indent - 2));
+                    prevLines.Add(">>" + Loggers.Indent(Lines[lineNum], indent - 2));
                 else
-                    prevLines.Add(Loggers.Indent(FileLines[lineNum], indent));
+                    prevLines.Add(Loggers.Indent(Lines[lineNum], indent));
 
                 lineNum--;
             }
 
             int count = 0;
             while (lineNum > 0 && count++ < prevLineCount)
-                prevLines.Insert(0, FileLines[lineNum--]);
+                prevLines.Insert(0, Lines[lineNum--]);
 
             return prevLines;
         }
@@ -256,8 +188,8 @@ namespace VTMetaLib.VTank
             List<string> nextLines = new List<string>();
             int count = 0;
             int lineNum = LineNumber + 1;
-            while (lineNum < FileLines.Count && ++count < lineCount)
-                nextLines.Add(FileLines[lineNum++]);
+            while (lineNum < Lines.Count && ++count < lineCount)
+                nextLines.Add(Lines[lineNum++]);
             return nextLines;
         }
 
@@ -304,27 +236,11 @@ namespace VTMetaLib.VTank
             return sb.ToString();
         }
 
-        public bool HasMoreLines()
-        {
-            return LineNumber + 1 < FileLines.Count;
-        }
-
-        public void Restart()
-        {
-            LineNumber = Column = 0;
-        }
-
-        public void Clear()
-        {
-            Restart();
-            FileLines.Clear();
-        }
-
         public string ReadNextRequiredLine(string reason)
         {
             string nextLine = ReadNextLine();
             if (nextLine == null)
-                throw new InvalidOperationException($"Unable to read another line for '{reason}' since no lines remaining after {FileLines.Count} lines were read.");
+                throw new InvalidOperationException($"Unable to read another line for '{reason}' since no lines remaining after {Lines.Count} lines were read.");
             return nextLine;
         }
 
@@ -384,5 +300,122 @@ namespace VTMetaLib.VTank
                 throw new ArgumentException($"Invalid boolean value: {orig}");
         }
 
+        public bool HasMoreLines()
+        {
+            return LineNumber + 1 < Lines.Count;
+        }
+
+        public void Restart()
+        {
+            LineNumber = Column = 0;
+        }
+
+        public void Clear()
+        {
+            Restart();
+            Column = 0;
+            Lines.Clear();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var line in Lines)
+                sb.AppendLine(line);
+            return sb.ToString();
+        }
+    }
+
+    public class InMemoryLines : LineReadable
+    {
+
+        public override List<string> Lines { get; } = new List<string>();
+
+        public InMemoryLines(IEnumerable<string> lines = null)
+        {
+            if (lines != null)
+                Lines.AddRange(lines);
+        }
+
+        public InMemoryLines AddLine(string line)
+        {
+            Lines.Add(line);
+            return this;
+        }
+    }
+
+    public class MetaFile : LineReadable
+    {
+
+        /// <summary>
+        /// The meta file path on the disk
+        /// </summary>
+        public string Path { get; private set; }
+
+        public override List<string> Lines { get; } = new List<string>();
+
+        public bool HasPath
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(Path);
+            }
+        }
+
+        public bool FileExists
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(Path) && File.Exists(Path);
+            }
+        }
+
+        /// <summary>
+        /// Flushes the current meta file contained in this object to the local filesystem. If the Path already exists, it will be overwritten, not appended to.
+        /// </summary>
+        public void FlushToDisk()
+        {
+            if (File.Exists(Path))
+                Loggers.WriterLog.Info($"Overwriting existing meta file while writing: {Path}");
+            Loggers.WriterLog.Info($"Writing meta to file: {Path}...");
+            using (StreamWriter writer = new StreamWriter(Path, false))
+            {
+                // simply write the current FileLines to the target path
+                writer.Write(ToString());
+            }
+            Loggers.WriterLog.Info($"Finished writing meta file: {Path}");
+        }
+
+        /// <summary>
+        /// Returns the text that should be displayed when indicating the source file where an error occurred. If the path name was provided, then it will be
+        /// included, otherwise this will just return the meta name (in-memory building of metas?)
+        /// </summary>
+        /// <returns></returns>
+        public override string GetSourceText()
+        {
+            return HasPath ? $"{Name} ({Path})" : Name;
+        }
+
+        /// <summary>
+        /// The meta file type that is being read from or written to
+        /// </summary>
+        public MetaFileType FileType { get; private set; }
+
+        public MetaFile(MetaFileType fileType, string path, List<string> lines = null, string name = "")
+        {
+            FileType = fileType;
+            Name = string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(path) ? GetNameFromPath(path) : name;
+            Path = string.IsNullOrEmpty(path) ? name : path;
+            if (lines != null)
+                Lines.AddRange(lines);
+        }
+
+        public static string GetNameFromPath(string path)
+        {
+            int lastSlash = path.LastIndexOfAny(new char[] {'\\', '/'});
+            string afterSlash = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+            int lastDot = afterSlash.LastIndexOf('.');
+            return lastDot > 0 ? afterSlash.Substring(0, lastDot) : afterSlash;
+        }
     }
 }

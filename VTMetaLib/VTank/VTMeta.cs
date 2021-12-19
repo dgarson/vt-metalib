@@ -39,7 +39,7 @@ namespace VTMetaLib.VTank
             return table;
         }
 
-        public void ReadDataFrom(MetaFile file)
+        public void ReadDataFrom(LineReadable file)
         {
             int tableCount = file.ReadAndParseInt(typeof(VTMeta), "meta tableCount");
             if (tableCount != 1)
@@ -55,7 +55,7 @@ namespace VTMetaLib.VTank
             ReadDataFrom(metaFile);
         }
 
-        public void ReadFromData(MetaFile file, VTDataType data)
+        public void ReadFromData(LineReadable file, VTDataType data)
         {
             VTTable table = data as VTTable;
             if (table.ColumnCount != 5)

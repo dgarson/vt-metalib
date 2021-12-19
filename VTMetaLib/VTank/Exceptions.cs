@@ -8,19 +8,19 @@ namespace VTMetaLib.VTank
 {
     public class MetaException : Exception
     {
-        public MetaFile Context { get; private set; }
+        public LineReadable Context { get; private set; }
 
-        public MetaException(MetaFile context)
+        public MetaException(LineReadable context)
         {
             Context = context;
         }
 
-        public MetaException(MetaFile context, string message) : base(message)
+        public MetaException(LineReadable context, string message) : base(message)
         {
             Context = context;
         }
 
-        public MetaException(MetaFile context, string message, Exception inner) : base(message, inner)
+        public MetaException(LineReadable context, string message, Exception inner) : base(message, inner)
         {
             Context = context;
         }
@@ -28,16 +28,16 @@ namespace VTMetaLib.VTank
 
     public class MetaElementNotFoundException : MetaException
     {
-        public MetaElementNotFoundException(MetaFile context, string message) : base(context, message) { }
+        public MetaElementNotFoundException(LineReadable context, string message) : base(context, message) { }
     }
 
     public class RecordOutOfBoundsException : MetaException
     {
-        public RecordOutOfBoundsException(MetaFile context, string message) : base(context, message) { }
+        public RecordOutOfBoundsException(LineReadable context, string message) : base(context, message) { }
     }
 
     public class MalformedMetaException : MetaException
     {
-        public MalformedMetaException(MetaFile context, string message) : base(context, message) { }
+        public MalformedMetaException(LineReadable context, string message) : base(context, message) { }
     }
 }

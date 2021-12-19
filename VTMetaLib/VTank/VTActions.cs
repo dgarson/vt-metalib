@@ -58,8 +58,8 @@ namespace VTMetaLib.VTank
 		}
 
 		public abstract VTDataType AsVTData();
-		public abstract void ReadDataFrom(MetaFile reader);
-		public abstract void ReadFromData(MetaFile file, VTDataType data);
+		public abstract void ReadDataFrom(LineReadable reader);
+		public abstract void ReadFromData(LineReadable file, VTDataType data);
 
 		public virtual void WriteTo(MetaFileBuilder writer)
         {
@@ -80,7 +80,7 @@ namespace VTMetaLib.VTank
 	{
 		public AUnassigned() : base(VTActionType.Unassigned) { }
 
-		public override void ReadDataFrom(MetaFile file)
+		public override void ReadDataFrom(LineReadable file)
 		{
 			throw file.MalformedFor("AUnassigned not supported");
 		}
@@ -90,7 +90,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(0);
 		}
 
-		public override void ReadFromData(MetaFile file, VTDataType data)
+		public override void ReadFromData(LineReadable file, VTDataType data)
 		{
 			throw file.MalformedFor("AUnassigned not supported");
 		}
@@ -112,7 +112,7 @@ namespace VTMetaLib.VTank
 			State = state;
 		}
 
-		public override void ReadDataFrom(MetaFile file)
+		public override void ReadDataFrom(LineReadable file)
 		{
 			ReadFromData(file, file.ReadExpectedData(typeof(ASetState), typeof(VTString)) as VTString);
 		}
@@ -122,7 +122,7 @@ namespace VTMetaLib.VTank
 			return new VTString(State);
 		}
 
-		public override void ReadFromData(MetaFile file, VTDataType data)
+		public override void ReadFromData(LineReadable file, VTDataType data)
 		{
 			VTString val = data as VTString;
 			State = val.Value;
@@ -140,7 +140,7 @@ namespace VTMetaLib.VTank
 			Message = message;
 		}
 
-		public override void ReadDataFrom(MetaFile file)
+		public override void ReadDataFrom(LineReadable file)
 		{
 			ReadFromData(file,
 				file.ReadExpectedData(typeof(AChatCommand), typeof(VTString)) as VTString);
@@ -151,7 +151,7 @@ namespace VTMetaLib.VTank
 			return new VTString(Message);
 		}
 
-		public override void ReadFromData(MetaFile file, VTDataType data)
+		public override void ReadFromData(LineReadable file, VTDataType data)
 		{
 			VTString val = data as VTString;
 			Message = val.Value;
@@ -175,7 +175,7 @@ namespace VTMetaLib.VTank
 				table.AddTwoColRow(new VTInteger(child.TypeId), child.AsVTData());
 		}
 
-        protected override void ReadFromTable(MetaFile file, VTTable table)
+        protected override void ReadFromTable(LineReadable file, VTTable table)
         {
 			foreach (VTTableRow row in table.Rows)
 			{
@@ -193,35 +193,57 @@ namespace VTMetaLib.VTank
 	{
 		public string Bytes { get; private set; }
 
+		public VTNavRoute NavRoute { get; private set; }
+
 		internal AEmbedNav() : base(VTActionType.EmbedNav) { }
 
 		public AEmbedNav(byte[] bytes) : this()
 		{
-			Bytes = Encoding.UTF8.GetString(bytes);
+			SetData(Encoding.UTF8.GetString(bytes));
 		}
 
 		public AEmbedNav(string bytes) : this()
 		{
 			// technically ASCII
-			Bytes = bytes;
+			SetData(bytes);
 		}
 
-		public override void ReadDataFrom(MetaFile file)
+		private void SetData(string bytes)
+        {
+			Bytes = bytes;
+			List<string> lines = Bytes.Split("\r\n").ToList<string>();
+			lines.RemoveRange(0, 2);
+			NavRoute = NavRoutes.LoadNavRoute(new InMemoryLines(lines));
+		}
+
+		private string GetData()
+        {
+			if (NavRoute == null)
+				return Bytes;
+
+			MetaFileBuilder builder = new MetaFileBuilder(MetaFileType.NavRoute, "[EmbeddedNav]");
+			NavRoute.WriteTo(builder);
+			return builder.ToString();
+        }
+
+		public override void ReadDataFrom(LineReadable file)
 		{
 			ReadFromData(file,
 				file.ReadExpectedData(typeof(AEmbedNav), typeof(VTByteArray)));
 		}
 
-		public override void ReadFromData(MetaFile file, VTDataType data)
+		public override void ReadFromData(LineReadable file, VTDataType data)
 		{
 			VTByteArray byteArray = data as VTByteArray;
+			SetData(byteArray.Value);
 			Bytes = byteArray.Value;
 		}
 
         public override void WriteTo(MetaFileBuilder writer)
         {
-			writer.WriteLine(Bytes.Length.ToString());
-			writer.WriteString(Bytes);
+			string bytes = GetData();
+			writer.WriteLine(bytes.Length.ToString());
+			writer.WriteString(bytes);
         }
 
         public override VTDataType AsVTData()
@@ -249,7 +271,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("ret"), new VTString(ReturnToStateName));
 		}
 
-        protected override void ReadFromTable(MetaFile file, VTTable table)
+        protected override void ReadFromTable(LineReadable file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ACallState");
@@ -280,7 +302,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(Expression));
         }
 
-        protected override void ReadFromTable(MetaFile file, VTTable table)
+        protected override void ReadFromTable(LineReadable file, VTTable table)
         {
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for AExprAction");
@@ -304,7 +326,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(ChatExpression));
 		}
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for AChatExpr");
@@ -336,7 +358,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("t"), new VTDouble(Seconds));
 		}
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 3)
 				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for ASetWatchdog");
@@ -353,7 +375,7 @@ namespace VTMetaLib.VTank
 
         protected override void PopulateTable(VTTable table) { }
 
-        protected override void ReadFromTable(MetaFile file, VTTable table)
+        protected override void ReadFromTable(LineReadable file, VTTable table)
         {
 			if (table.RowCount != 0)
 				throw file.MalformedFor($"Expected zero rows but got {table.RowCount} for AClearWatchdog");
@@ -380,7 +402,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("v"), new VTString(VarName));
         }
 
-        protected override void ReadFromTable(MetaFile file, VTTable table)
+        protected override void ReadFromTable(LineReadable file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for AGetOpt");
@@ -410,7 +432,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("v"), new VTString(Expression));
 		}
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ASetOpt");
@@ -440,7 +462,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("x"), new VTByteArray(XmlBytes));
 		}
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ACreateView");
@@ -466,7 +488,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("n"), new VTString(ViewName));
 		}
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for ADestroyView");
@@ -481,7 +503,7 @@ namespace VTMetaLib.VTank
 
 		protected override void PopulateTable(VTTable table) { }
 
-		protected override void ReadFromTable(MetaFile file, VTTable table)
+		protected override void ReadFromTable(LineReadable file, VTTable table)
 		{
 			if (table.RowCount != 0)
 				throw file.MalformedFor($"Expected zero rows but got {table.RowCount} for ADestroyAllViews");
@@ -490,7 +512,7 @@ namespace VTMetaLib.VTank
 
 	public static class VTActionTypeExtensions
 	{
-		internal static VTAction NewAction(this VTActionType type, MetaFile file)
+		internal static VTAction NewAction(this VTActionType type, LineReadable file)
 		{
 			switch (type)
 			{

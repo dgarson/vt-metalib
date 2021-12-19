@@ -34,7 +34,7 @@ namespace VTMetaLib.VTank
         // TODO: return a more complex type than bool, e.g. something incorporating info about exception/parse error?
         public abstract void SetValueFromString(string strValue);
 
-        internal virtual void ReadFrom(MetaFile file)
+        internal virtual void ReadFrom(LineReadable file)
         {
             string line = file.ReadNextRequiredLine(TypeName);
             SetValueFromString(line);
@@ -355,7 +355,7 @@ namespace VTMetaLib.VTank
             Value = strValue;
         }
 
-        internal override void ReadFrom(MetaFile file)
+        internal override void ReadFrom(LineReadable file)
         {
             int byteCount = file.ReadNextLineAsInt();
             StringBuilder sb = new StringBuilder(byteCount);

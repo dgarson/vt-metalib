@@ -26,7 +26,7 @@ namespace VTMetaLib.VTank
 
         public static ILog Log = LogManager.GetLogger("VTank.Log");
 
-        public static void Info(this MetaFile context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Info(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -35,7 +35,7 @@ namespace VTMetaLib.VTank
                 Log.Info(formatted);
         }
 
-        public static void Warn(this MetaFile context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Warn(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -44,7 +44,7 @@ namespace VTMetaLib.VTank
                 Log.Warn(formatted);
         }
 
-        public static void Error(this MetaFile context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Error(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -53,7 +53,7 @@ namespace VTMetaLib.VTank
                 Log.Error(formatted);
         }
 
-        public static void Debug(this MetaFile context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Debug(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -62,7 +62,7 @@ namespace VTMetaLib.VTank
                 Log.Debug(formatted);
         }
 
-        internal static string FormatMessageForContext(this MetaFile file, string message, ContextInformation contextInfo)
+        internal static string FormatMessageForContext(this LineReadable file, string message, ContextInformation contextInfo)
         {
             if (contextInfo == ContextInformation.None)
                 return message;

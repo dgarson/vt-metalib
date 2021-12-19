@@ -113,7 +113,7 @@ namespace VTMetaLib.VTank
 
         internal void AddLineToEnd(string line)
         {
-            File.FileLines.Add(line);
+            File.Lines.Add(line);
             File.LineNumber++;
             File.Column = 0;
             lineBuilder.Clear();

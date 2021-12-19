@@ -67,16 +67,16 @@ namespace VTMetaLib.VTank
             TypeId = typeId;
         }
 
-        public void ReadDataFrom(MetaFile file)
+        public void ReadDataFrom(LineReadable file)
         {
             ReadFrom(file);
         }
 
-        public abstract void ReadFrom(MetaFile file);
+        public abstract void ReadFrom(LineReadable file);
 
         public abstract void WriteTo(MetaFileBuilder writer);
 
-        public void ReadFromData(MetaFile file, VTDataType data)
+        public void ReadFromData(LineReadable file, VTDataType data)
         {
             throw new NotImplementedException("Unable to read Nav Route models to VTData primitives");
         }
@@ -113,7 +113,7 @@ namespace VTMetaLib.VTank
                 Nodes.AddRange(initialNodes);
         }
 
-        public override void ReadFrom(MetaFile file)
+        public override void ReadFrom(LineReadable file)
         {
             int nodeCount = file.ReadNextLineAsInt();
             for (int i = 0; i < nodeCount; i++)
@@ -148,7 +148,7 @@ namespace VTMetaLib.VTank
             TargetWID = targetWID;
         }
 
-        public override void ReadFrom(MetaFile file)
+        public override void ReadFrom(LineReadable file)
         {
             TargetName = file.ReadNextLineAsString();
             TargetWID = file.ReadNextLineAsInt();
@@ -187,7 +187,7 @@ namespace VTMetaLib.VTank
             Z = z;
         }
 
-        public override void ReadFrom(MetaFile file)
+        public override void ReadFrom(LineReadable file)
         {
             X = file.ReadNextLineAsDouble();
             Y = file.ReadNextLineAsDouble();
@@ -197,7 +197,7 @@ namespace VTMetaLib.VTank
             ReadNodeData(file);
         }
 
-        protected abstract void ReadNodeData(MetaFile file);
+        protected abstract void ReadNodeData(LineReadable file);
 
         public override void WriteTo(MetaFileBuilder writer)
         {
@@ -217,7 +217,7 @@ namespace VTMetaLib.VTank
 
         public NavNodePoint(double x, double y, double z) : base(NavNodeType.Point, x, y, z) { }
 
-        protected override void ReadNodeData(MetaFile file) { }
+        protected override void ReadNodeData(LineReadable file) { }
 
         protected override void WriteNodeData(MetaFileBuilder writer) { }
     }
@@ -233,7 +233,7 @@ namespace VTMetaLib.VTank
             PortalWID = portalWID;
         }
 
-        public override void ReadFrom(MetaFile file)
+        public override void ReadFrom(LineReadable file)
         {
             throw new NotImplementedException("Portal nav nodes are deprecated");
         }
@@ -256,7 +256,7 @@ namespace VTMetaLib.VTank
             SpellId = spellId;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             SpellId = file.ReadNextLineAsInt();
         }
@@ -278,7 +278,7 @@ namespace VTMetaLib.VTank
             Seconds = seconds;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             Seconds = file.ReadNextLineAsDouble();
         }
@@ -300,7 +300,7 @@ namespace VTMetaLib.VTank
             ChatText = text;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             ChatText = file.ReadNextLineAsString();
         }
@@ -327,7 +327,7 @@ namespace VTMetaLib.VTank
             VendorName = vendorName;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             VendorWID = file.ReadNextLineAsInt();
             VendorName = file.ReadNextLineAsString();
@@ -360,7 +360,7 @@ namespace VTMetaLib.VTank
             ObjectZ = objZ;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             ObjectName = file.ReadNextLineAsString();
             ObjectClass = file.ReadNextLineAsInt();
@@ -402,7 +402,7 @@ namespace VTMetaLib.VTank
             ObjectZ = objZ;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             ObjectName = file.ReadNextLineAsString();
             ObjectClass = file.ReadNextLineAsInt();
@@ -430,7 +430,7 @@ namespace VTMetaLib.VTank
 
         public NavNodeCheckpoint(double x, double y, double z) : base(NavNodeType.Checkpoint, x, y, z) { }
 
-        protected override void ReadNodeData(MetaFile file) { }
+        protected override void ReadNodeData(LineReadable file) { }
 
         protected override void WriteNodeData(MetaFileBuilder writer) { }
     }
@@ -452,7 +452,7 @@ namespace VTMetaLib.VTank
             DurationSecs = durationSecs;
         }
 
-        protected override void ReadNodeData(MetaFile file)
+        protected override void ReadNodeData(LineReadable file)
         {
             Heading = file.ReadNextLineAsDouble();
             HoldShift = file.ReadNextLineAsBoolean();
@@ -471,7 +471,9 @@ namespace VTMetaLib.VTank
     {
         public static readonly string NavRouteHeader = "uTank2 NAV 1.2";
 
-        public static VTNavRoute LoadNavRoute(MetaFile file)
+        public static int NavRoutesLoaded { get; private set; } = 0;
+
+        public static VTNavRoute LoadNavRoute(LineReadable file)
         {
             string header = file.ReadNextLineAsString();
             if (header != NavRouteHeader)
@@ -480,6 +482,7 @@ namespace VTMetaLib.VTank
             NavRouteType routeType = (NavRouteType)routeTypeId;
             VTNavRoute navRoute = routeType.NewRoute();
             navRoute.ReadFrom(file);
+            NavRoutesLoaded++;
             return navRoute;
         }
 

@@ -132,7 +132,7 @@ namespace VTMetaLib.VTank
             return String.Join(";", values.ToArray());
         }
 
-        internal override void ReadFrom(MetaFile file)
+        internal override void ReadFrom(LineReadable file)
         {
             Name = file.ReadNextLineAsString();
             int colCount = file.ReadNextLineAsInt();
