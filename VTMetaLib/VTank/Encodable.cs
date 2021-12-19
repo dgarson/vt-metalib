@@ -32,25 +32,16 @@ namespace VTMetaLib.VTank
         public void ReadFromData(MetaFile file, VTDataType data);
 
         /// <summary>
-        /// Converts this data portion of this encodable object as a VTDataType, which can be written out to a meta file.
-        /// This MAY be an instance of VTNone if values are not applicable for this encodable object type.
-        /// </summary>
-        public VTDataType AsVTData();
-    }
-
-    public interface VTEncodableWithSerializer : VTEncodable
-    {
-
-        /// <summary>
-        /// Deserializes an instance of this encodable object directly from a MetaFile, supporting non-primitive types.
-        /// </summary>
-        public void ReadFrom(MetaFile metaFile);
-
-        /// <summary>
         /// Writes this encodable object to the given file builder, which may not conform to the standard VTData type primitives.
         /// </summary>
         /// <param name="writer">the writer to append to</param>
         public void WriteTo(MetaFileBuilder writer);
+
+        /// <summary>
+        /// Converts this data portion of this encodable object as a VTDataType, which can be written out to a meta file.
+        /// This MAY be an instance of VTNone if values are not applicable for this encodable object type.
+        /// </summary>
+        public VTDataType AsVTData();
     }
 
     public class TableSchema
@@ -152,6 +143,11 @@ namespace VTMetaLib.VTank
         }
 
         protected abstract void ReadFromTable(MetaFile file, VTTable table);
+
+        public void WriteTo(MetaFileBuilder writer)
+        {
+            writer.WriteData(AsVTData());
+        }
     }
 
     /// <summary>
@@ -182,6 +178,11 @@ namespace VTMetaLib.VTank
         public void ReadFromData(MetaFile file, VTDataType data)
         {
             file.VerifyExpectedData(GetType(), data, (int)0);
+        }
+
+        public void WriteTo(MetaFileBuilder writer)
+        {
+            writer.WriteLine("0");
         }
     }
 

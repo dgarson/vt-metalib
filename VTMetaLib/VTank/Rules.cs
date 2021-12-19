@@ -66,5 +66,14 @@ namespace VTMetaLib.VTank
 			VTString stateName = file.ReadVTString();
 			return new VTRule(stateName.Value, condition, action);
         }
-    }
+	
+		public static void WriteRule(this MetaFileBuilder writer, VTRule rule)
+        {
+			writer.WriteLine(rule.Condition.TypeId.ToString());
+			writer.WriteLine(rule.Action.TypeId.ToString());
+			rule.Condition.WriteTo(writer);
+			rule.Action.WriteTo(writer);
+			writer.WriteData(new VTString(rule.StateName));
+        }
+	}
 }

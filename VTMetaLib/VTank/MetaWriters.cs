@@ -8,7 +8,7 @@ namespace VTMetaLib.VTank
 {
     public class MetaFileBuilder
     {
-        private StringBuilder lineBuilder = null;
+        private StringBuilder lineBuilder = new StringBuilder();
 
         public MetaFile File
         {
@@ -97,7 +97,8 @@ namespace VTMetaLib.VTank
         /// </summary>
         public void WriteLine(string line)
         {
-            AddLineToEnd(line);
+            lineBuilder.Append(line);
+            AddLineFromBuilder();
         }
 
         public void WriteData(VTDataType data)

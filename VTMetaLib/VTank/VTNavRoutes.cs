@@ -58,7 +58,7 @@ namespace VTMetaLib.VTank
         SocietyEW = 6326
     }
 
-    public abstract class VTNavRouteEntityBase : VTEncodableWithSerializer
+    public abstract class VTNavRouteEntityBase : VTEncodable
     {
         public int TypeId { get; private set; }
 

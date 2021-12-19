@@ -383,6 +383,7 @@ namespace VTMetaLib.VTank
 
         internal override void WriteTo(MetaFileBuilder writer)
         {
+            writer.WriteLine(GetTypeAsString());
             writer.WriteLine(ByteCount.ToString());
             // NO TERMINATING LINE FEED!
             writer.WriteString(Value);

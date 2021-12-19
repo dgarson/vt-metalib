@@ -79,7 +79,13 @@ namespace VTMetaLib.VTank
 		public abstract VTDataType AsVTData();
 		public abstract void ReadDataFrom(MetaFile file);
 		public abstract void ReadFromData(MetaFile file, VTDataType data);
-	}
+
+        public void WriteTo(MetaFileBuilder writer)
+        {
+			writer.WriteData(new VTInteger(TypeId));
+			writer.WriteData(AsVTData());
+        }
+    }
 
 	public abstract class VTConditionWithZeroData : VTZeroIntEncodable, VTCondition
 	{
@@ -186,12 +192,12 @@ namespace VTMetaLib.VTank
 	{
 		public List<VTCondition> Children { get; } = new List<VTCondition>();
 
-		public CAny(List<VTCondition> children) : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV)
+		public CAny(List<VTCondition> children) : base(VTConditionType.Any, TableTypeConstants.SCHEMA_KV)
 		{
 			Children.AddRange(children);
 		}
 
-		internal CAny() : base(VTConditionType.All, TableTypeConstants.SCHEMA_KV) { }
+		internal CAny() : base(VTConditionType.Any, TableTypeConstants.SCHEMA_KV) { }
 
 		protected override void PopulateTable(VTTable table)
 		{
@@ -553,11 +559,11 @@ namespace VTMetaLib.VTank
 
 	public class CNot : VTConditionWithTableData
 	{
-		public VTConditionWithTableData Condition { get; private set; }
+		public VTCondition Condition { get; private set; }
 
 		internal CNot() : base(VTConditionType.Not, TableTypeConstants.SCHEMA_KV) { }
 
-		public CNot(VTConditionWithTableData notCond) : this()
+		public CNot(VTCondition notCond) : this()
 		{
 			Condition = notCond;
 		}
@@ -572,6 +578,7 @@ namespace VTMetaLib.VTank
             VTConditionType ctype = (VTConditionType)table[0][0].GetValue();
 			VTCondition cond = ctype.NewCondition(file);
 			cond.ReadFromData(file, table[0][1]);
+			Condition = cond;
         }
     }
 

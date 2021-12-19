@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VTMetaLib.VTank
 {
-    public class VTMeta : VTEncodableWithSerializer
+    public class VTMeta : VTEncodable
     {
         public int TypeId => 0;
 

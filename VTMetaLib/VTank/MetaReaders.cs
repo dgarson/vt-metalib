@@ -393,7 +393,7 @@ namespace VTMetaLib.VTank
             string tableName = string.IsNullOrEmpty(name) ? file.ReadNextRequiredLine($"tableName for {tablePurpose}") : name;
             tablePurpose = tablePurpose ?? "TABLE";
 
-            VTTable table = new VTTable(name);
+            VTTable table = new VTTable(tableName);
             int columnCount = file.ReadAndParseInt(typeof(VTTable), $"columnCount for {tableName} for {tablePurpose}");
 
             // COLUMN NAMES

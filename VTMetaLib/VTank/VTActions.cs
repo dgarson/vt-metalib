@@ -60,6 +60,11 @@ namespace VTMetaLib.VTank
 		public abstract VTDataType AsVTData();
 		public abstract void ReadDataFrom(MetaFile reader);
 		public abstract void ReadFromData(MetaFile file, VTDataType data);
+
+		public virtual void WriteTo(MetaFileBuilder writer)
+        {
+			writer.WriteData(AsVTData());
+        }
 	}
 
 	public abstract class VTActionWithZeroData : VTZeroIntEncodable, VTAction
@@ -93,7 +98,7 @@ namespace VTMetaLib.VTank
 
 	public class ANone : VTActionWithZeroData
 	{
-		public ANone() : base(VTActionType.Unassigned) { }
+		public ANone() : base(VTActionType.None) { }
 	}
 
 	public class ASetState : VTActionWithScalarData
@@ -213,7 +218,13 @@ namespace VTMetaLib.VTank
 			Bytes = byteArray.Value;
 		}
 
-		public override VTDataType AsVTData()
+        public override void WriteTo(MetaFileBuilder writer)
+        {
+			writer.WriteLine(Bytes.Length.ToString());
+			writer.WriteString(Bytes);
+        }
+
+        public override VTDataType AsVTData()
 		{
 			return new VTByteArray(Bytes);
 		}

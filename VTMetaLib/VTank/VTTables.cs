@@ -158,7 +158,7 @@ namespace VTMetaLib.VTank
 
         internal override void WriteTo(MetaFileBuilder writer)
         {
-            writer.WriteLine(Name);
+            writer.WriteLine(string.IsNullOrEmpty(Name) ? "TABLE" : Name);
             writer.WriteLine(ColumnCount.ToString());
             for (int i = 0; i < ColumnCount; i++)
                 writer.WriteLine(ColumnNames[i]);
