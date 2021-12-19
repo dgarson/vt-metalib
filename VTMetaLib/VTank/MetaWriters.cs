@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public class MetaFileBuilder
     {

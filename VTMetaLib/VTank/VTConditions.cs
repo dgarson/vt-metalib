@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
 	public enum VTConditionType
 	{
@@ -77,8 +77,8 @@ namespace MetaLib.VTank
         }
 
 		public abstract VTDataType AsVTData();
-		public abstract void ReadDataFrom(MetaFileReader reader);
-		public abstract void ReadFromData(MetaContext context, VTDataType data);
+		public abstract void ReadDataFrom(MetaFile file);
+		public abstract void ReadFromData(MetaFile file, VTDataType data);
 	}
 
 	public abstract class VTConditionWithZeroData : VTZeroIntEncodable, VTCondition
@@ -153,14 +153,14 @@ namespace MetaLib.VTank
 				table.AddTwoColRow(new VTInteger(cond.TypeId), cond.AsVTData());
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			foreach (VTTableRow row in table.Rows)
 			{
 				VTInteger ctypeVal = row["K"] as VTInteger;
 				VTConditionType ctype = (VTConditionType)ctypeVal.Value;
-				VTCondition cond = ctype.NewCondition(context);
-				cond.ReadFromData(context, row["V"]);
+				VTCondition cond = ctype.NewCondition(file);
+				cond.ReadFromData(file, row["V"]);
 
 				Children.Add(cond);
 			}
@@ -199,14 +199,14 @@ namespace MetaLib.VTank
 				table.AddTwoColRow(new VTInteger(cond.TypeId), cond.AsVTData());
 		}
 
-		protected override void ReadFromTable(MetaContext context, VTTable table)
+		protected override void ReadFromTable(MetaFile file, VTTable table)
 		{
 			foreach (VTTableRow row in table.Rows)
 			{
 				VTInteger ctypeVal = row["K"] as VTInteger;
 				VTConditionType ctype = (VTConditionType)ctypeVal.Value;
-				VTCondition cond = ctype.NewCondition(context);
-				cond.ReadFromData(context, row["V"]);
+				VTCondition cond = ctype.NewCondition(file);
+				cond.ReadFromData(file, row["V"]);
 
 				Children.Add(cond);
 			}
@@ -226,10 +226,10 @@ namespace MetaLib.VTank
 			MatchText = text;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			ReadFromData(reader.MetaContext,
-				reader.ReadExpectedData(typeof(CChatMatch), typeof(VTString)) as VTString);
+			ReadFromData(file,
+				file.ReadExpectedData(typeof(CChatMatch), typeof(VTString)) as VTString);
 		}
 
 		public override VTDataType AsVTData()
@@ -237,7 +237,7 @@ namespace MetaLib.VTank
 			return new VTString(MatchText);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			MatchText = data.GetValueAsString();
         }
@@ -254,9 +254,10 @@ namespace MetaLib.VTank
 			Slots = slots;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			ReadFromData(reader.MetaContext, reader.ReadExpectedData(typeof(CMainSlotsLE), typeof(VTInteger)) as VTInteger);
+			ReadFromData(file, 
+				file.ReadExpectedData(typeof(CMainSlotsLE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -264,7 +265,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Slots);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			var slots = data as VTInteger;
             Slots = slots.Value;
@@ -282,10 +283,10 @@ namespace MetaLib.VTank
 			Seconds = secs;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			ReadFromData(reader.MetaContext, 
-				reader.ReadExpectedData(typeof(CSecsInStateGE), typeof(VTInteger)) as VTInteger);
+			ReadFromData(file, 
+				file.ReadExpectedData(typeof(CSecsInStateGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -293,7 +294,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Seconds);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			VTInteger secsVal = data as VTInteger;
 			Seconds = secsVal.Value;
@@ -340,10 +341,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTInteger(Count));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 2)
-				throw context.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountLE");
+				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountLE");
 			// TODO OPTIONAL VALIDATION
 			ItemName = table.Rows[0][1].GetValueAsString();
 			var countCol = table.Rows[1][1] as VTInteger;
@@ -371,10 +372,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTInteger(Count));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 2)
-				throw context.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountGE");
+				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountGE");
 			// TODO OPTIONAL VALIDATION
 			ItemName = table.Rows[0][1].GetValueAsString();
 			var countCol = table.Rows[1][1] as VTInteger;
@@ -406,10 +407,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 3)
-				throw context.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistanceName");
+				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistanceName");
 			// TODO OPTIONAL VALIDATION
 			MonsterName = table.Rows[0][1].GetValueAsString();
 			Count = (int)table.Rows[1][1].GetValue();
@@ -441,10 +442,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 3)
-				throw context.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistancePriority");
+				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistancePriority");
 			// TODO OPTIONAL VALIDATION
 			Priority = (int)table.Rows[0][1].GetValue();
 			Count = (int)table.Rows[1][1].GetValue();
@@ -473,10 +474,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 1)
-				throw context.MalformedFor($"Expected only 1 row but got {table.RowCount} for CNoMobsInRange");
+				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for CNoMobsInRange");
 			// TODO OPTIONAL VALIDATION
 			Distance = (double)table.Rows[0][1].GetValue();
 		}
@@ -493,10 +494,10 @@ namespace MetaLib.VTank
 			Landblock = landblock;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			var lb = reader.ReadExpectedData(typeof(CLandblockE), typeof(VTInteger)) as VTInteger;
-			ReadFromData(reader.MetaContext, lb);
+			var lb = file.ReadExpectedData(typeof(CLandblockE), typeof(VTInteger)) as VTInteger;
+			ReadFromData(file, lb);
 		}
 
 		public override VTDataType AsVTData()
@@ -504,7 +505,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Landblock);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			var lb = data as VTInteger;
 			Landblock = lb.Value;
@@ -522,10 +523,10 @@ namespace MetaLib.VTank
 			Landcell = landcell;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			var lc = reader.ReadExpectedData(typeof(CLandcellE), typeof(VTInteger)) as VTInteger;
-			ReadFromData(reader.MetaContext, lc);
+			var lc = file.ReadExpectedData(typeof(CLandcellE), typeof(VTInteger)) as VTInteger;
+			ReadFromData(file, lc);
 		}
 
 		public override VTDataType AsVTData()
@@ -533,7 +534,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Landcell);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			var lc = data as VTInteger;
 			Landcell = lc.Value;
@@ -566,11 +567,11 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTInteger(Condition.TypeId), Condition.AsVTData());
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
             VTConditionType ctype = (VTConditionType)table[0][0].GetValue();
-			VTCondition cond = ctype.NewCondition(context);
-			cond.ReadFromData(context, table[0][1]);
+			VTCondition cond = ctype.NewCondition(file);
+			cond.ReadFromData(file, table[0][1]);
         }
     }
 
@@ -585,10 +586,10 @@ namespace MetaLib.VTank
 			Seconds = seconds;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			ReadFromData(reader.MetaContext,
-				reader.ReadExpectedData(typeof(CPSecsInStateGE), typeof(VTInteger)) as VTInteger);
+			ReadFromData(file,
+				file.ReadExpectedData(typeof(CPSecsInStateGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -596,7 +597,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Seconds);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			VTInteger secs = data as VTInteger;
 			Seconds = secs.Value;
@@ -623,10 +624,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("sec"), new VTInteger(Seconds));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 2)
-				throw context.MalformedFor($"Expected 2 rows but got {table.RowCount} for CSecsOnSpellGE");
+				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CSecsOnSpellGE");
 			// TODO OPTIONAL VALIDATION
 			SpellId = (int)table.Rows[0][1].GetValue();
 			Seconds = (int)table.Rows[1][1].GetValue();
@@ -644,10 +645,10 @@ namespace MetaLib.VTank
 			Burden = burden;
 		}
 
-		public override void ReadDataFrom(MetaFileReader reader)
+		public override void ReadDataFrom(MetaFile file)
 		{
-			ReadFromData(reader.MetaContext, 
-				reader.ReadExpectedData(typeof(CBurdenPercentGE), typeof(VTInteger)) as VTInteger);
+			ReadFromData(file, 
+				file.ReadExpectedData(typeof(CBurdenPercentGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -655,7 +656,7 @@ namespace MetaLib.VTank
 			return new VTInteger(Burden);
 		}
 
-        public override void ReadFromData(MetaContext context, VTDataType data)
+        public override void ReadFromData(MetaFile context, VTDataType data)
         {
 			VTInteger burden = data as VTInteger;
 			Burden = burden.Value;
@@ -678,10 +679,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("d"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 1)
-				throw context.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
+				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
 			// TODO optional additional validation
 			var distance = (double)table[0][1].GetValue();
 			Distance = distance;
@@ -704,10 +705,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(Expr));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 1)
-				throw context.MalformedFor($"Expected only one row but got {table.RowCount} for CExpr");
+				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CExpr");
 
 			Expr = table.Rows[0][1].GetValueAsString();
 		}
@@ -733,10 +734,10 @@ namespace MetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTString(ColorIdList));
 		}
 
-        protected override void ReadFromTable(MetaContext context, VTTable table)
+        protected override void ReadFromTable(MetaFile file, VTTable table)
         {
 			if (table.RowCount != 1)
-				throw context.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
+				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
 			// TODO additional validation
 
 			Pattern = table.Rows[0][1].GetValueAsString();
@@ -746,7 +747,7 @@ namespace MetaLib.VTank
 
 	public static class VTConditionHelpers
     {
-		internal static VTCondition NewCondition(this VTConditionType type, MetaContext metaContext)
+		internal static VTCondition NewCondition(this VTConditionType type, MetaFile file)
 		{
 			switch (type)
 			{
@@ -755,6 +756,7 @@ namespace MetaLib.VTank
 				case VTConditionType.Always: return new CAlways();
 				case VTConditionType.All: return new CAll();
 				case VTConditionType.Any: return new CAny();
+				case VTConditionType.Expr: return new CExpr();
 				case VTConditionType.ChatMatch: return new CChatMatch();
 				case VTConditionType.MainSlotsLE: return new CMainSlotsLE();
 				case VTConditionType.SecsInStateGE: return new CSecsInStateGE();
@@ -778,7 +780,7 @@ namespace MetaLib.VTank
 				case VTConditionType.DistanceToRouteGE: return new CDistanceToRouteGE();
 				case VTConditionType.ChatCapture: return new CChatCapture();
 				default:
-					throw metaContext.MalformedFor($"No such CTypeID = {type} ({(int)type})");
+					throw file.MalformedFor($"No such CTypeID = {type} ({(int)type})");
 			}
 		}
 	}

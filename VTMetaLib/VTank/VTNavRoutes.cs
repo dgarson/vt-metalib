@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public enum NavRouteType
     {
@@ -67,16 +67,16 @@ namespace MetaLib.VTank
             TypeId = typeId;
         }
 
-        public void ReadDataFrom(MetaFileReader reader)
+        public void ReadDataFrom(MetaFile file)
         {
-            ReadFrom(reader.File);
+            ReadFrom(file);
         }
 
         public abstract void ReadFrom(MetaFile file);
 
         public abstract void WriteTo(MetaFileBuilder writer);
 
-        public void ReadFromData(MetaContext context, VTDataType data)
+        public void ReadFromData(MetaFile file, VTDataType data)
         {
             throw new NotImplementedException("Unable to read Nav Route models to VTData primitives");
         }

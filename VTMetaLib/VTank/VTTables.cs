@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public class VTTable : VTDataType
     {
@@ -132,7 +132,31 @@ namespace MetaLib.VTank
             return String.Join(";", values.ToArray());
         }
 
-        internal void WriteData(MetaFileBuilder writer)
+        internal override void ReadFrom(MetaFile file)
+        {
+            Name = file.ReadNextLineAsString();
+            int colCount = file.ReadNextLineAsInt();
+
+            Rows.Clear();
+            ColumnNames.Clear();
+            ColumnIndexed.Clear();
+
+            for (int i = 0; i < colCount; i++)
+                ColumnNames.Add(file.ReadNextLineAsString());
+            for (int i = 0; i < colCount; i++)
+                ColumnIndexed.Add(file.ReadNextLineAsBoolean());
+            
+            int rowCount = file.ReadNextLineAsInt();
+            for (int i = 0; i < rowCount; i++)
+            {
+                VTTableRow row = new VTTableRow(this);
+                foreach (var colName in ColumnNames)
+                    row[colName] = file.ReadTypedData(typeof(VTTable));
+                Rows.Add(row);
+            }
+        }
+
+        internal override void WriteTo(MetaFileBuilder writer)
         {
             writer.WriteLine(Name);
             writer.WriteLine(ColumnCount.ToString());

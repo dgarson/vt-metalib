@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public enum MetaFileType
     {
@@ -18,7 +18,12 @@ namespace MetaLib.VTank
     {
         public static VTMeta LoadMetaFile(string path)
         {
+            List<string> lines = ReadAllLines(path);
+            MetaFile file = new MetaFile(MetaFileType.MetaFile, path, lines);
 
+            VTMeta meta = new VTMeta();
+            meta.ReadFrom(file);
+            return meta;
         }
 
         public static List<string> ReadAllLines(string path)
@@ -134,18 +139,21 @@ namespace MetaLib.VTank
 
         private string currentLine = null;
 
-        public MetaFile(MetaFileType fileType, string path)
+        public MetaFile(MetaFileType fileType, string path, List<string> lines = null, string name = "")
         {
             FileType = fileType;
-            Path = path;
+            Name = string.IsNullOrEmpty(name) ? GetNameFromPath(path) : name;
+            Path = string.IsNullOrEmpty(path) ? null : path;
+            if (lines != null)
+                FileLines.AddRange(lines);
         }
 
-        public MetaFile(MetaFileType fileType, string name, List<string> lines, string path = "")
+        public static string GetNameFromPath(string path)
         {
-            FileType = fileType;
-            Name = name;
-            Path = String.IsNullOrEmpty(path) ? null : path;
-            FileLines.AddRange(lines);
+            int lastSlash = path.LastIndexOfAny(new char[] {'\\', '/'});
+            string afterSlash = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+            int lastDot = afterSlash.LastIndexOf('.');
+            return lastDot > 0 ? afterSlash.Substring(0, lastDot) : afterSlash;
         }
 
         public string this[int index]
@@ -158,7 +166,7 @@ namespace MetaLib.VTank
 
         public string ReadNextLine()
         {
-            if (Column > 0 && currentLine != null)
+            if (Column > 0 && currentLine != null && Column < currentLine.Length)
             {
                 string remainder = currentLine.Substring(Column);
                 Column = currentLine.Length;
@@ -278,7 +286,8 @@ namespace MetaLib.VTank
             for (int i = 0; i < count; i++)
             {
                 if (Column >= currentLine.Length)
-                    throw new IndexOutOfRangeException($"Unable to get column #{Column} when line only has {currentLine.Length} characters: \"{current}\"");
+                    ReadNextRequiredLine("nextChars with " + (i - count) + " remaining");
+                // throw new IndexOutOfRangeException($"Unable to get column #{Column} when line only has {currentLine.Length} characters: \"{current}\"");
                 sb.Append(currentLine[Column++]);
             }
             return sb.ToString();

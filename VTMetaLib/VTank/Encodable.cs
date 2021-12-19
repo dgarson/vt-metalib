@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
 
     /// <summary>
@@ -22,14 +22,14 @@ namespace MetaLib.VTank
         /// Shorthand for reading the associated data type for this encodable object and handing it off to the
         /// ReadFromData method, using the reader's MetaContext.
         /// </summary>
-        public void ReadDataFrom(MetaFileReader reader);
+        public void ReadDataFrom(MetaFile reader);
 
         /// <summary>
         /// Reads the data for this encodable object from a VTData value
         /// </summary>
-        /// <param name="context">the context within which this encodable object is being read</param>
+        /// <param name="file">the file within which this encodable object is being read</param>
         /// <param name="data">the data for this encodable (already read beforehand)</param>
-        public void ReadFromData(MetaContext context, VTDataType data);
+        public void ReadFromData(MetaFile file, VTDataType data);
 
         /// <summary>
         /// Converts this data portion of this encodable object as a VTDataType, which can be written out to a meta file.
@@ -51,14 +51,6 @@ namespace MetaLib.VTank
         /// </summary>
         /// <param name="writer">the writer to append to</param>
         public void WriteTo(MetaFileBuilder writer);
-    }
-
-    public static class VTEncodableExtensions
-    {
-        public static void ReadFromData(this VTEncodable encodable, MetaFileReader reader, VTDataType data)
-        {
-            encodable.ReadFromData(reader.MetaContext, data);
-        }
     }
 
     public class TableSchema
@@ -146,20 +138,20 @@ namespace MetaLib.VTank
 
         protected abstract void PopulateTable(VTTable table);
 
-        public void ReadDataFrom(MetaFileReader reader)
+        public void ReadDataFrom(MetaFile file)
         {
-            VTTable table = reader.ReadSpecialTableWithExpectedColumns(GetType().Name, columnNames);
-            ReadFromData(reader.MetaContext, table);
+            VTTable table = file.ReadSpecialTableWithExpectedColumns(GetType().Name, columnNames);
+            ReadFromData(file, table);
         }
 
-        public void ReadFromData(MetaContext context, VTDataType data)
+        public void ReadFromData(MetaFile file, VTDataType data)
         {
             if (data.GetType() != typeof(VTTable))
-                throw context.MalformedFor($"Unexpected non-VTTable for Table-Encodable type {GetType().Name}, got {data.GetType().Name}");
-            ReadFromTable(context, data as VTTable);
+                throw file.MalformedFor($"Unexpected non-VTTable for Table-Encodable type {GetType().Name}, got {data.GetType().Name}");
+            ReadFromTable(file, data as VTTable);
         }
 
-        protected abstract void ReadFromTable(MetaContext context, VTTable table);
+        protected abstract void ReadFromTable(MetaFile file, VTTable table);
     }
 
     /// <summary>
@@ -180,16 +172,16 @@ namespace MetaLib.VTank
             return new VTInteger(0);
         }
 
-        public void ReadDataFrom(MetaFileReader reader)
+        public void ReadDataFrom(MetaFile file)
         {
-            VTInteger val = reader.ReadExpectedData(GetType(), typeof(VTInteger)) as VTInteger;
-            ReadFromData(reader.MetaContext, val);
+            VTInteger val = file.ReadExpectedData(GetType(), typeof(VTInteger)) as VTInteger;
+            ReadFromData(file, val);
 
         }
 
-        public void ReadFromData(MetaContext context, VTDataType data)
+        public void ReadFromData(MetaFile file, VTDataType data)
         {
-            context.VerifyExpectedData(GetType(), data, (int)0);
+            file.VerifyExpectedData(GetType(), data, (int)0);
         }
     }
 

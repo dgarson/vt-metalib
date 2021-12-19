@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
 	public class TableTypeConstants
 	{
@@ -51,19 +51,19 @@ namespace MetaLib.VTank
 	public static class MetaReaderExtensions
     {
 		
-		public static VTRule ReadRule(this MetaFileReader reader)
+		public static VTRule ReadRule(this MetaFile file)
         {
 			// TODO validate ID values exist ...
-			VTConditionType condType = (VTConditionType)reader.ReadInteger().Value;
-			VTActionType actionType = (VTActionType)reader.ReadInteger().Value;
+			VTConditionType condType = (VTConditionType)file.ReadVTInteger().Value;
+			VTActionType actionType = (VTActionType)file.ReadVTInteger().Value;
 
-			VTCondition condition = condType.NewCondition(reader.MetaContext);
-			condition.ReadDataFrom(reader);
+			VTCondition condition = condType.NewCondition(file);
+			condition.ReadDataFrom(file);
 
-			VTAction action = actionType.NewAction(reader.MetaContext);
-			action.ReadDataFrom(reader);
+			VTAction action = actionType.NewAction(file);
+			action.ReadDataFrom(file);
 
-			VTString stateName = reader.ReadString();
+			VTString stateName = file.ReadVTString();
 			return new VTRule(stateName.Value, condition, action);
         }
     }

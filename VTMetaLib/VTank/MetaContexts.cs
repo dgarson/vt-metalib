@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using log4net;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public class MetaContext
     {
@@ -102,7 +102,7 @@ namespace MetaLib.VTank
         {
             if (TypesBeingRead.Count == 0)
             {
-                FileContext.Error("Unable to FinishReadingType because no VT data types were being read!");
+                MetaFile.Error("Unable to FinishReadingType because no VT data types were being read!");
                 return null;
             }
             return TypesBeingRead.Pop();
@@ -125,10 +125,10 @@ namespace MetaLib.VTank
             {
                 if (!File.Exists(path))
                 {
-                    FileContext.Error($"Unable to load nav route from filesystem because it does not exist: {path}");
+                    MetaFile.Error($"Unable to load nav route from filesystem because it does not exist: {path}");
                     throw NotFound($"Unable to load nav route from filesystem because it does not exist: {path}");
                 }
-                FileContext.Debug($"Loading nav route for first time from filesystem: {path}");
+                MetaFile.Debug($"Loading nav route for first time from filesystem: {path}");
                 route = File.ReadAllText(path);
                 NavRoutesByPath[path] = route;
             }
@@ -155,12 +155,12 @@ namespace MetaLib.VTank
         /// <returns></returns>
         public MalformedMetaException MalformedFor(string message)
         {
-            return new MalformedMetaException(this, message);
+            return new MalformedMetaException(MetaFile, message);
         }
 
         public MetaElementNotFoundException NotFound(string message)
         {
-            return new MetaElementNotFoundException(this, message);
+            return new MetaElementNotFoundException(MetaFile, message);
         }
     }
 
@@ -200,7 +200,7 @@ namespace MetaLib.VTank
 
         public MetaFileContext(MetaFile metaFile, bool writing = false)
         {
-            metaFile = MetaFile;
+            MetaFile = metaFile;
             MetaContext = new MetaContext(this);
             Reader = new MetaFileReader(this);
             IsNewFile = string.IsNullOrWhiteSpace(metaFile.Path) || !File.Exists(metaFile.Path);

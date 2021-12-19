@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public class MetaFileReader
     {
@@ -248,26 +248,220 @@ namespace MetaLib.VTank
 
     public static class VTMetaReaderExtensions
     {
-        public static VTDataType ReadExpectedData(this MetaFileReader reader, Type parentType, Type expectedType)
+        public static MalformedMetaException MalformedFor(this MetaFile file, string message)
         {
-            VTDataType data = reader.ReadTypedData(parentType);
+            return new MalformedMetaException(file, message);
+        }
+
+        public static string ReadNextLine(this MetaFile file, Type dtType, string reason)
+        {
+            string line = file.ReadNextLine();
+            if (line == null)
+                throw file.MalformedFor($"No lines remaining to read for type {dtType.Name}: {reason}");
+            return line;
+        }
+
+        public static char ReadNextChar(this MetaFile file, Type dtType, string reason)
+        {
+            char ch = file.ReadNextChar();
+            if (ch == (char)0)
+                throw file.MalformedFor($"Unable to read another character for type {dtType.Name}: {reason}");
+            return ch;
+        }
+
+        public static VTDouble ReadVTDouble(this MetaFile file)
+        {
+            string line = file.ReadNextLine(typeof(VTDouble), "double");
+            double value;
+            if (!double.TryParse(line, out value))
+                throw file.MalformedFor($"Invalid numerical value for double: {line}");
+            // TODO:
+            // could do something like...
+            //      new VTDouble(value, context.CaptureContext());
+            //  where CaptureContext() creatures a detached copy of the current cursor in meta (e.g. line/col) and maybe
+            //      additional lines before (and possibly ability to fetch lines after at a later time via a method call?)
+            return new VTDouble(value);
+        }
+
+        public static VTFloat ReadVTFloat(this MetaFile file)
+        {
+            string line = file.ReadNextLine(typeof(VTDouble), "float");
+            float value;
+            if (!float.TryParse(line, out value))
+                throw file.MalformedFor($"Invalid numerical value for float: {line}");
+            return new VTFloat(value);
+        }
+
+        public static VTInteger ReadVTInteger(this MetaFile file)
+        {
+            return new VTInteger(file.ReadAndParseInt(typeof(VTInteger), "int"));
+        }
+
+        internal static int ReadAndParseInt(this MetaFile file, Type dtType, string reason)
+        {
+            string line = file.ReadNextLine(dtType, "int");
+            int value;
+            if (!int.TryParse(line, out value))
+                throw file.MalformedFor($"Invalid numerical value for integer: {line}");
+            return value;
+        }
+
+        public static VTUnsignedInteger ReadVTUnsignedInt(this MetaFile file)
+        {
+            string line = file.ReadNextLine(typeof(VTUnsignedInteger), "uint");
+            uint value;
+            if (!uint.TryParse(line, out value))
+                throw file.MalformedFor($"Invalid numerical value for unsigned integer: {line}");
+            return new VTUnsignedInteger(value);
+        }
+
+        public static VTBoolean ReadVTBoolean(this MetaFile file)
+        {
+            return new VTBoolean(file.ReadAndParseBool(typeof(VTBoolean), "boolean"));
+        }
+
+        internal static bool ReadAndParseBool(this MetaFile file, Type dtType, string reason)
+        {
+            string line = file.ReadNextLine(dtType, "bool");
+            if (line == "True" || line == "y")
+                return true;
+            else if (line == "False" || line == "n")
+                return false;
+            else
+                throw file.MalformedFor($"Unable to parse boolean value from {line} for {reason}");
+        }
+
+        public static VTString ReadVTString(this MetaFile file)
+        {
+            string line = file.ReadNextLine(typeof(VTString), "string");
+            return new VTString(line);
+        }
+
+        public static VTByteArray ReadVTByteArray(this MetaFile file)
+        {
+            VTByteArray ba = new VTByteArray();
+            ba.ReadFrom(file);
+            /*
+            int count = file.ReadAndParseInt(typeof(VTByteArray), "byte count");
+            // string fullLine 
+            file.ReadNextLine(typeof(VTByteArray), "byte array data");
+            String bytes = file.ReadNextChars(count);
+            return new VTByteArray(bytes);
+            */
+            return ba;
+        }
+
+        internal static VTDataType ReadTypedData(this MetaFile file, Type parentType)
+        {
+            string typeStr = file.ReadNextLine(parentType, $"data type for record in {parentType.Name}");
+            switch (typeStr)
+            {
+                // table type (unnamed)
+                case "TABLE":
+                    return file.ReadVTTable(parentType.Name, "TABLE");
+                // integer type
+                case "i":
+                    return file.ReadVTInteger();
+                // double type
+                case "d":
+                    return file.ReadVTDouble();
+                // string type
+                case "s":
+                    return file.ReadVTString();
+                // boolean type
+                case "b":
+                    return file.ReadVTBoolean();
+                // unsigned integer type
+                case "u":
+                    return file.ReadVTUnsignedInt();
+                // float type (unused?)
+                case "f":
+                    return file.ReadVTFloat();
+                // byte array
+                case "ba":
+                    return file.ReadVTByteArray();
+                // null value
+                case "0":
+                    return new VTUnassigned();
+            }
+            throw file.MalformedFor($"Invalid data type string '{typeStr}'");
+        }
+
+        public static VTTable ReadVTTable(this MetaFile file, string tablePurpose = "", string name = null)
+        {
+            // DO NOT READ ANOTHER LINE FOR THE NAME IF IT WAS ALREADY READ!
+            string tableName = string.IsNullOrEmpty(name) ? file.ReadNextRequiredLine($"tableName for {tablePurpose}") : name;
+            tablePurpose = tablePurpose ?? "TABLE";
+
+            VTTable table = new VTTable(name);
+            int columnCount = file.ReadAndParseInt(typeof(VTTable), $"columnCount for {tableName} for {tablePurpose}");
+
+            // COLUMN NAMES
+            for (int i = 0; i < columnCount; i++)
+            {
+                string colName = file.ReadNextLine(typeof(VTTable), $"columnName for {tableName} for {tablePurpose}");
+                if (string.IsNullOrEmpty(colName))
+                    throw file.MalformedFor($"Found blank name for column #{i} of table {tableName} for {tablePurpose}");
+                table.ColumnNames.Add(colName);
+            }
+
+            // COLUMN INDEXING
+            for (int i = 0; i < columnCount; i++)
+            {
+                bool indexed = file.ReadAndParseBool(typeof(VTTable), $"isIndexedCol {i} of {tableName} for {tablePurpose}");
+                table.ColumnIndexed.Add(indexed);
+            }
+
+
+            // BODY
+            int recordCount = file.ReadAndParseInt(typeof(VTTable), $"recordCount of {tableName} for {tablePurpose}");
+            for (int i = 0; i < recordCount; i++)
+            {
+                VTTableRow record = file.ReadVTTableRecord(table, i);
+                table.Rows.Add(record);
+            }
+
+            // all done
+            return table;
+        }
+
+        internal static VTTableRow ReadVTTableRecord(this MetaFile file, VTTable table, int recordNum)
+        {
+            VTTableRow row = new VTTableRow(table);
+            for (int i = 0; i < table.ColumnCount; i++)
+            {
+
+                // TODO: wrap this in another try-catch to bubble up additional contextual information about where in meta
+                //      processing we are!
+                VTDataType data = file.ReadTypedData(typeof(VTTable));
+
+                row[table.ColumnNames[i]] = data;
+            }
+
+            // finished reading every column
+            return row;
+        }
+
+        public static VTDataType ReadExpectedData(this MetaFile file, Type parentType, Type expectedType)
+        {
+            VTDataType data = file.ReadTypedData(parentType);
             if (data.GetType() != expectedType)
-                throw reader.MalformedFor($"{parentType.Name}: Expected to read {expectedType.Name} but got {data.GetType()}: {data.GetValueAsString()}");
+                throw file.MalformedFor($"{parentType.Name}: Expected to read {expectedType.Name} but got {data.GetType()}: {data.GetValueAsString()}");
             return data;
         }
 
-        public static void VerifyExpectedData(this MetaContext context, Type parentType, VTDataType val, object expected)
+        public static void VerifyExpectedData(this MetaFile file, Type parentType, VTDataType val, object expected)
         {
             var dtVal = val.GetValue();
             if (!Object.Equals(dtVal, expected))
-                throw context.MalformedFor($"{parentType.Name}: Expected to get value {expected} but got value: {dtVal}");
+                throw file.MalformedFor($"{parentType.Name}: Expected to get value {expected} but got value: {dtVal}");
         }
 
-        public static VTTable ReadSpecialTableWithExpectedColumns(this MetaFileReader reader, string tablePurpose, List<string> colNames)
+        public static VTTable ReadSpecialTableWithExpectedColumns(this MetaFile file, string tablePurpose, List<string> colNames)
         {
-            VTTable table = reader.ReadTable();
+            VTTable table = file.ReadVTTable();
             if (table.ColumnNames.Count != colNames.Count)
-                throw reader.MalformedFor($"Unexpected number of columns ({table.ColumnNames.Count}) when {colNames.Count} expected in table for {tablePurpose}");
+                throw file.MalformedFor($"Unexpected number of columns ({table.ColumnNames.Count}) when {colNames.Count} expected in table for {tablePurpose}");
             return table;
         }
     }

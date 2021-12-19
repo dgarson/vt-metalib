@@ -6,7 +6,7 @@ using System.Xml;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
 
     public abstract class VTDataType
@@ -358,8 +358,27 @@ namespace MetaLib.VTank
         internal override void ReadFrom(MetaFile file)
         {
             int byteCount = file.ReadNextLineAsInt();
-            file.ReadNextRequiredLine("bytearray");
-            SetValueFromString(file.ReadNextChars(byteCount));
+            StringBuilder sb = new StringBuilder(byteCount);
+            file.ReadNextRequiredLine($"bytearray[{byteCount}]");
+            for (int i = 0; i < byteCount; i++)
+            {
+                char ch = (char)file.ReadNextChar();
+                if (ch == 0)
+                {
+                    // add the line-feed as a byte read
+                    i++;
+                    sb.AppendLine();
+
+                    // read another line if we have more to go...
+                    if (i < byteCount)
+                        file.ReadNextRequiredLine($"bytearray[{byteCount - i}]");
+                    continue;
+                }
+
+                sb.Append(ch);
+            }
+            file.LineNumber--;
+            SetValueFromString(sb.ToString());
         }
 
         internal override void WriteTo(MetaFileBuilder writer)

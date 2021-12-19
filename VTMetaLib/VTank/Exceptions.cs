@@ -4,23 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetaLib.VTank
+namespace VTMetaLib.VTank
 {
     public class MetaException : Exception
     {
-        public MetaContext Context { get; private set; }
+        public MetaFile Context { get; private set; }
 
-        public MetaException(MetaContext context)
+        public MetaException(MetaFile context)
         {
             Context = context;
         }
 
-        public MetaException(MetaContext context, string message) : base(message)
+        public MetaException(MetaFile context, string message) : base(message)
         {
             Context = context;
         }
 
-        public MetaException(MetaContext context, string message, Exception inner) : base(message, inner)
+        public MetaException(MetaFile context, string message, Exception inner) : base(message, inner)
         {
             Context = context;
         }
@@ -28,16 +28,16 @@ namespace MetaLib.VTank
 
     public class MetaElementNotFoundException : MetaException
     {
-        public MetaElementNotFoundException(MetaContext context, string message) : base(context, message) { }
+        public MetaElementNotFoundException(MetaFile context, string message) : base(context, message) { }
     }
 
     public class RecordOutOfBoundsException : MetaException
     {
-        public RecordOutOfBoundsException(MetaContext context, string message) : base(context, message) { }
+        public RecordOutOfBoundsException(MetaFile context, string message) : base(context, message) { }
     }
 
     public class MalformedMetaException : MetaException
     {
-        public MalformedMetaException(MetaContext context, string message) : base(context, message) { }
+        public MalformedMetaException(MetaFile context, string message) : base(context, message) { }
     }
 }
