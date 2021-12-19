@@ -377,8 +377,15 @@ namespace VTMetaLib.VTank
 
                 sb.Append(ch);
             }
-            file.LineNumber--;
-            SetValueFromString(sb.ToString());
+            // file.LineNumber--;
+            string str = sb.ToString();
+            if (str.Length != byteCount)
+                throw new ArgumentException($"Expected to read {byteCount} bytes but have {str.Length} in buffer");
+            if (str.EndsWith("\n"))
+            {
+                file.MovePreviousLine();
+            }
+            SetValueFromString(str);
         }
 
         internal override void WriteTo(MetaFileBuilder writer)

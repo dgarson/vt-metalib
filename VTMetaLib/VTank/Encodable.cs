@@ -182,7 +182,7 @@ namespace VTMetaLib.VTank
 
         public void WriteTo(MetaFileBuilder writer)
         {
-            writer.WriteLine("0");
+            writer.WriteData(AsVTData());
         }
     }
 

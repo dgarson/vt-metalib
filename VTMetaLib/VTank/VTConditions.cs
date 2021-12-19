@@ -743,7 +743,7 @@ namespace VTMetaLib.VTank
 
         protected override void ReadFromTable(MetaFile file, VTTable table)
         {
-			if (table.RowCount != 1)
+			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
 			// TODO additional validation
 
@@ -767,6 +767,7 @@ namespace VTMetaLib.VTank
 				case VTConditionType.ChatMatch: return new CChatMatch();
 				case VTConditionType.MainSlotsLE: return new CMainSlotsLE();
 				case VTConditionType.SecsInStateGE: return new CSecsInStateGE();
+				case VTConditionType.Death: return new CDeath();
 				case VTConditionType.NavEmpty: return new CNavEmpty();
 				case VTConditionType.VendorOpen: return new CVendorOpen();
 				case VTConditionType.VendorClosed: return new CVendorClosed();

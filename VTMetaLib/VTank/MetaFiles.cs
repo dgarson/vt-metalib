@@ -164,13 +164,24 @@ namespace VTMetaLib.VTank
             }
         }
 
+        public void MovePreviousLine()
+        {
+            if (LineNumber == 0)
+                return;
+            
+            LineNumber--;
+            currentLine = FileLines[LineNumber];
+            Column = 0;
+        }
+
         public string ReadNextLine()
         {
             if (Column > 0 && currentLine != null && Column < currentLine.Length)
             {
-                string remainder = currentLine.Substring(Column);
-                Column = currentLine.Length;
-                return remainder;
+                string prevLineText = currentLine;
+                currentLine = currentLine.Substring(Column);
+                Column = 0;
+                return currentLine;
             }
 
             if (LineNumber >= FileLines.Count)
