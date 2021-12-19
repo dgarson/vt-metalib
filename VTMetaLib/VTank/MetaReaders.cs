@@ -121,8 +121,9 @@ namespace MetaLib.VTank
         public VTByteArray ReadByteArray()
         {
             int count = ReadAndParseInt(typeof(VTByteArray), "byte count");
-            string byteStr = ReadNextLine(typeof(VTByteArray), "byte array data");
-            return new VTByteArray(byteStr);
+            /* string fullLine = */ ReadNextLine(typeof(VTByteArray), "byte array data");
+            String bytes = File.ReadNextChars(count);
+            return new VTByteArray(bytes);
         }
 
         internal VTDataType ReadTypedData(Type parentType)

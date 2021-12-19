@@ -132,9 +132,21 @@ namespace MetaLib.VTank
             return String.Join(";", values.ToArray());
         }
 
-        internal void WriteTo(MetaFileBuilder writer)
+        internal void WriteData(MetaFileBuilder writer)
         {
+            writer.WriteLine(Name);
+            writer.WriteLine(ColumnCount.ToString());
+            for (int i = 0; i < ColumnCount; i++)
+                writer.WriteLine(ColumnNames[i]);
+            for (int i = 0; i < ColumnCount; i++)
+                writer.WriteLine(ColumnIndexed[i] ? "y" : "n");
+            writer.WriteLine(RowCount.ToString());
 
+            foreach (VTTableRow row in Rows)
+            {
+                for (int i = 0; i < ColumnCount; i++)
+                    writer.WriteData(row[i]);
+            }
         }
     }
 

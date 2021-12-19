@@ -30,7 +30,6 @@ namespace MetaLib.VTank
 
         public MetaFileBuilder(MetaFileType fileType, string path) : this(MetaFiles.CreateContextForNewFile(fileType, path))
         {
-
         }
 
         public MetaFileBuilder(MetaFileContext context)
@@ -103,15 +102,7 @@ namespace MetaLib.VTank
 
         public void WriteData(VTDataType data)
         {
-            if (data.GetType() == typeof(VTTable))
-            {
-                // TODO HANDLE WRITING OF TABLE TYPES
-            }
-            else
-            {
-                WriteLine(data.GetTypeAsString());
-                WriteLine(data.GetValueAsString());
-            }
+            data.WriteTo(this);
         }
 
         internal void AddLineFromBuilder()

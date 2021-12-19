@@ -13,8 +13,14 @@ namespace MetaLib.VTank
         NavRoute,
         SettingsProfile,
     }
+
     public static class MetaFiles
     {
+        public static VTMeta LoadMetaFile(string path)
+        {
+
+        }
+
         public static List<string> ReadAllLines(string path)
         {
             using (StreamReader reader = new StreamReader(path))
@@ -152,6 +158,13 @@ namespace MetaLib.VTank
 
         public string ReadNextLine()
         {
+            if (Column > 0 && currentLine != null)
+            {
+                string remainder = currentLine.Substring(Column);
+                Column = currentLine.Length;
+                return remainder;
+            }
+
             if (LineNumber >= FileLines.Count)
                 return null;
 
@@ -256,6 +269,19 @@ namespace MetaLib.VTank
         {
             var current = GetCurrentLineOrNull();
             return Column >= currentLine.Length ? (char)0 : currentLine[Column++];
+        }
+
+        public string ReadNextChars(int count)
+        {
+            var current = GetCurrentLineOrNull();
+            StringBuilder sb = new StringBuilder(count);
+            for (int i = 0; i < count; i++)
+            {
+                if (Column >= currentLine.Length)
+                    throw new IndexOutOfRangeException($"Unable to get column #{Column} when line only has {currentLine.Length} characters: \"{current}\"");
+                sb.Append(currentLine[Column++]);
+            }
+            return sb.ToString();
         }
 
         public bool HasMoreLines()

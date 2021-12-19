@@ -17,14 +17,19 @@ namespace MetaLib.VTank
 
     public class VTRule
     {
-		public string StateName { get; set; }
+		public string StateName { get; internal set; }
 
-        public VTConditionData Condition { get; set; }  
+        public VTCondition Condition { get; internal set; }  
 
-		public VTAction Action { get; set; }
+		public VTAction Action { get; internal set; }
+
+		public VTRule(string stateName, VTCondition condition, VTAction action)
+        {
+			StateName = stateName;
+			Condition = condition;
+			Action = action;
+        }
     }
-
-	
 
 	public class VTConditionData
 	{
@@ -42,4 +47,24 @@ namespace MetaLib.VTank
 
 		public VTDataType Data { get; set; }
 	}
+
+	public static class MetaReaderExtensions
+    {
+		
+		public static VTRule ReadRule(this MetaFileReader reader)
+        {
+			// TODO validate ID values exist ...
+			VTConditionType condType = (VTConditionType)reader.ReadInteger().Value;
+			VTActionType actionType = (VTActionType)reader.ReadInteger().Value;
+
+			VTCondition condition = condType.NewCondition(reader.MetaContext);
+			condition.ReadDataFrom(reader);
+
+			VTAction action = actionType.NewAction(reader.MetaContext);
+			action.ReadDataFrom(reader);
+
+			VTString stateName = reader.ReadString();
+			return new VTRule(stateName.Value, condition, action);
+        }
+    }
 }

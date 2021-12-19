@@ -40,6 +40,12 @@ namespace MetaLib.VTank
             SetValueFromString(line);
         }
 
+        internal virtual void WriteTo(MetaFileBuilder writer)
+        {
+            writer.WriteLine(GetTypeAsString());
+            writer.WriteLine(GetValueAsString());
+        }
+
         public void Print(StreamWriter writer)  // = System.IO.SystemOUt ? etc
         {
             writer.Write($"{GetValue().ToString()}");
@@ -49,6 +55,15 @@ namespace MetaLib.VTank
         {
             Console.WriteLine($"{GetValue().ToString()}");
         }
+
+
+
+
+
+
+
+
+
 
         public virtual void WriteAsXml(XmlWriter writer)
         {
@@ -309,6 +324,8 @@ namespace MetaLib.VTank
     {
         public string Value { get; private set; }
 
+        public int ByteCount => Value.Length;
+
         public VTByteArray(string data) : this()
         {
             Value = data;
@@ -336,6 +353,20 @@ namespace MetaLib.VTank
         public override void SetValueFromString(string strValue)
         {
             Value = strValue;
+        }
+
+        internal override void ReadFrom(MetaFile file)
+        {
+            int byteCount = file.ReadNextLineAsInt();
+            file.ReadNextRequiredLine("bytearray");
+            SetValueFromString(file.ReadNextChars(byteCount));
+        }
+
+        internal override void WriteTo(MetaFileBuilder writer)
+        {
+            writer.WriteLine(ByteCount.ToString());
+            // NO TERMINATING LINE FEED!
+            writer.WriteString(Value);
         }
     }
 }

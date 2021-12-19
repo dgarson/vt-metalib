@@ -197,6 +197,14 @@ namespace MetaLib.VTank
             Reader = new MetaFileReader(this);
             IsNewFile = !File.Exists(path);
         }
+
+        public MetaFileContext(MetaFile metaFile, bool writing = false)
+        {
+            metaFile = MetaFile;
+            MetaContext = new MetaContext(this);
+            Reader = new MetaFileReader(this);
+            IsNewFile = string.IsNullOrWhiteSpace(metaFile.Path) || !File.Exists(metaFile.Path);
+        }
     }
 
     /// <summary>
