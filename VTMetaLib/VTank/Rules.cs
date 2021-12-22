@@ -31,23 +31,6 @@ namespace VTMetaLib.VTank
         }
     }
 
-	public class VTConditionData
-	{
-		public VTConditionType Type { get; set; } = VTConditionType.Unassigned;
-
-		/// <summary>
-		/// If this is a condition that has sub-elements, such as Any, Not or All conditions, then this will contain each "inner" condition
-		/// </summary>
-		public List<VTConditionData> Children { get; private set; } = new List<VTConditionData>();
-
-		/// <summary>
-		/// Contains a singular text value if this Condition acts on String values
-		/// </summary>
-		public string TextData { get; set; } = "";
-
-		public VTDataType Data { get; set; }
-	}
-
 	public static class MetaReaderExtensions
     {
 		

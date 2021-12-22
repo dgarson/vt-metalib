@@ -16,6 +16,8 @@ namespace VTMetaLib.VTank
 
         public ICollection<string> StateNames => States.Keys;
 
+        public int LineCount { get; private set; }
+
         public VTDataType AsVTData()
         {
             VTTable table = new VTTable("CondAct");
@@ -41,6 +43,8 @@ namespace VTMetaLib.VTank
 
         public void ReadDataFrom(LineReadable file)
         {
+            LineCount = file.Lines.Count;
+
             int tableCount = file.ReadAndParseInt(typeof(VTMeta), "meta tableCount");
             if (tableCount != 1)
                 throw file.MalformedFor($"Expected top-level tableCount to be 1 (one meta) but got {tableCount}");

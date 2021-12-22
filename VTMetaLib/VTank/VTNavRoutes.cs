@@ -473,11 +473,14 @@ namespace VTMetaLib.VTank
 
         public static int NavRoutesLoaded { get; private set; } = 0;
 
-        public static VTNavRoute LoadNavRoute(LineReadable file)
+        public static VTNavRoute LoadNavRoute(LineReadable file, bool skipHeader = false)
         {
-            string header = file.ReadNextLineAsString();
-            if (header != NavRouteHeader)
-                throw new ArgumentException($"Unexpected header on first line of nav route (\"{header}\") expected: {NavRouteHeader}");
+            if (!skipHeader)
+            {
+                string header = file.ReadNextLineAsString();
+                if (header != NavRouteHeader)
+                    throw new ArgumentException($"Unexpected header on first line of nav route (\"{header}\") expected: {NavRouteHeader}");
+            }
             int routeTypeId = file.ReadNextLineAsInt();
             NavRouteType routeType = (NavRouteType)routeTypeId;
             VTNavRoute navRoute = routeType.NewRoute();

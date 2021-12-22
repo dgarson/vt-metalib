@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace VTMetaLib.VTank
@@ -34,7 +35,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTActionWithTableData : VTTableEncodable, VTAction
 	{
-		public VTActionType ActionType { get; private set; }
+		public VTActionType ActionType { get; internal set; }
 
 		protected VTActionWithTableData(VTActionType actionType, List<ColumnSpec> columnSpecs, string tableName = "") : base((int)actionType, columnSpecs, tableName)
 		{
@@ -49,7 +50,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTActionWithScalarData : VTAction
 	{
-		public VTActionType ActionType { get; private set; }
+		public VTActionType ActionType { get; internal set; }
 		public int TypeId => (int)ActionType;
 
 		protected VTActionWithScalarData(VTActionType actionType)
@@ -69,7 +70,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTActionWithZeroData : VTZeroIntEncodable, VTAction
     {
-		public VTActionType ActionType { get; private set; }
+		public VTActionType ActionType { get; internal set; }
 		protected VTActionWithZeroData(VTActionType actionType) : base((int)actionType)
         {
 			ActionType = actionType;
@@ -103,7 +104,7 @@ namespace VTMetaLib.VTank
 
 	public class ASetState : VTActionWithScalarData
 	{
-		public string State { get; private set; }
+		public string State { get; internal set; }
 
 		internal ASetState() : base(VTActionType.SetState) { }
 
@@ -131,7 +132,7 @@ namespace VTMetaLib.VTank
 
 	public class AChatCommand : VTActionWithScalarData
 	{
-		public string Message { get; private set; }
+		public string Message { get; internal set; }
 
 		internal AChatCommand() : base(VTActionType.ChatCommand) { }
 
@@ -193,7 +194,7 @@ namespace VTMetaLib.VTank
 	{
 		public string Bytes { get; private set; }
 
-		public VTNavRoute NavRoute { get; private set; }
+		public VTNavRoute NavRoute { get; internal set; }
 
 		internal AEmbedNav() : base(VTActionType.EmbedNav) { }
 
@@ -208,15 +209,27 @@ namespace VTMetaLib.VTank
 			SetData(bytes);
 		}
 
-		private void SetData(string bytes)
+		internal void SetData(string bytes, bool isEmbedded = true)
         {
+			if (!bytes.Contains("uTank"))
+            {
+				isEmbedded = false;
+
+				// check as file path
+				if (File.Exists(bytes))
+                {
+					// use 'bytes' as file path
+					bytes = Encoding.UTF8.GetString(File.ReadAllBytes(bytes));
+                }
+            }
 			Bytes = bytes;
-			List<string> lines = Bytes.Split("\r\n").ToList<string>();
-			lines.RemoveRange(0, 2);
+			List<string> lines = Bytes.Replace("\r\n", "\n").Split("\n").ToList<string>();
+			if (isEmbedded)
+				lines.RemoveRange(0, 2);
 			NavRoute = NavRoutes.LoadNavRoute(new InMemoryLines(lines));
 		}
 
-		private string GetData()
+		internal string GetData()
         {
 			if (NavRoute == null)
 				return Bytes;
@@ -254,8 +267,8 @@ namespace VTMetaLib.VTank
 
 	public class ACallState : VTActionWithTableData
 	{
-		public string CallStateName { get; private set; }
-		public string ReturnToStateName { get; private set; }
+		public string CallStateName { get; internal set; }
+		public string ReturnToStateName { get; internal set; }
 
 		internal ACallState() : base(VTActionType.CallState, TableTypeConstants.SCHEMA_kv) { }
 
@@ -288,7 +301,7 @@ namespace VTMetaLib.VTank
 
 	public class AExprAction : VTActionWithTableData
 	{
-		public string Expression { get; private set; }
+		public string Expression { get; internal set; }
 
 		internal AExprAction() : base(VTActionType.Expr, TableTypeConstants.SCHEMA_kv) { }
 
@@ -312,7 +325,7 @@ namespace VTMetaLib.VTank
 
 	public class AChatExpr : VTActionWithTableData
 	{
-		public string ChatExpression { get; private set; }
+		public string ChatExpression { get; internal set; }
 
 		internal AChatExpr() : base(VTActionType.ChatExpr, TableTypeConstants.SCHEMA_kv) { }
 
@@ -336,11 +349,11 @@ namespace VTMetaLib.VTank
 
 	public class ASetWatchdog : VTActionWithTableData
 	{
-		public string StateName { get; private set; }
+		public string StateName { get; internal set; }
 
-		public double Distance { get; private set; }
+		public double Distance { get; internal set; }
 
-		public double Seconds { get; private set; }
+		public double Seconds { get; internal set; }
 
 		internal ASetWatchdog() : base(VTActionType.SetWatchdog, TableTypeConstants.SCHEMA_kv) { }
 
@@ -384,9 +397,9 @@ namespace VTMetaLib.VTank
 
 	public class AGetOpt : VTActionWithTableData
     {
-		public string OptionName { get; private set; }
+		public string OptionName { get; internal set; }
 
-		public string VarName { get; private set; }
+		public string VarName { get; internal set; }
 
 		internal AGetOpt() : base(VTActionType.GetOpt, TableTypeConstants.SCHEMA_kv) { }
 
@@ -414,9 +427,9 @@ namespace VTMetaLib.VTank
 
 	public class ASetOpt : VTActionWithTableData
 	{
-		public string OptionName { get; private set; }
+		public string OptionName { get; internal set; }
 
-		public string Expression { get; private set; }
+		public string Expression { get; internal set; }
 
 		internal ASetOpt() : base(VTActionType.SetOpt, TableTypeConstants.SCHEMA_kv) { }
 
@@ -444,9 +457,9 @@ namespace VTMetaLib.VTank
 
 	public class ACreateView : VTActionWithTableData
 	{
-		public string ViewName { get; private set; }
+		public string ViewName { get; internal set; }
 
-		public string XmlBytes { get; private set; }
+		public string XmlBytes { get; internal set; }
 
 		internal ACreateView() : base(VTActionType.CreateView, TableTypeConstants.SCHEMA_kv) { }
 
@@ -474,7 +487,7 @@ namespace VTMetaLib.VTank
 
 	public class ADestroyView : VTActionWithTableData
 	{
-		public string ViewName { get; private set; }
+		public string ViewName { get; internal set; }
 
 		internal ADestroyView() : base(VTActionType.DestroyView, TableTypeConstants.SCHEMA_kv) { }
 

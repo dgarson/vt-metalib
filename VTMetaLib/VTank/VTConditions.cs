@@ -47,7 +47,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTConditionWithTableData : VTTableEncodable, VTCondition
 	{
-		public VTConditionType ConditionType { get; private set; }
+		public VTConditionType ConditionType { get; internal set; }
 
         protected VTConditionWithTableData(VTConditionType condType, List<ColumnSpec> columnSpecs, string tableName = "") : base((int)condType, columnSpecs, tableName)
 		{
@@ -62,7 +62,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTConditionWithScalarData : VTEncodable, VTCondition
 	{
-		public VTConditionType ConditionType { get; private set; }
+		public VTConditionType ConditionType { get; internal set; }
 		public int TypeId
 		{
 			get
@@ -89,7 +89,7 @@ namespace VTMetaLib.VTank
 
 	public abstract class VTConditionWithZeroData : VTZeroIntEncodable, VTCondition
 	{
-		public VTConditionType ConditionType { get; private set; }
+		public VTConditionType ConditionType { get; internal set; }
 
 		protected VTConditionWithZeroData(VTConditionType condType) : base((int)condType)
         {
@@ -221,7 +221,7 @@ namespace VTMetaLib.VTank
 
 	public class CChatMatch : VTConditionWithScalarData
 	{
-		public string MatchText { get; private set; }
+		public string MatchText { get; internal set; }
 
 		internal CChatMatch() : base(VTConditionType.ChatMatch)
 		{
@@ -251,7 +251,7 @@ namespace VTMetaLib.VTank
 
 	public class CMainSlotsLE : VTConditionWithScalarData
 	{
-		public int Slots { get; private set; }
+		public int Slots { get; internal set; }
 
 		internal CMainSlotsLE() : base(VTConditionType.MainSlotsLE) { }
 
@@ -280,7 +280,7 @@ namespace VTMetaLib.VTank
 
 	public class CSecsInStateGE : VTConditionWithScalarData
 	{
-		public int Seconds { get; private set; }
+		public int Seconds { get; internal set; }
 
 		internal CSecsInStateGE() : base(VTConditionType.SecsInStateGE) { }
 
@@ -329,9 +329,9 @@ namespace VTMetaLib.VTank
 
 	public class CItemCountLE : VTConditionWithTableData
 	{
-		public string ItemName { get; private set; }
+		public string ItemName { get; internal set; }
 
-		public int Count { get; private set; }
+		public int Count { get; internal set; }
 
 		internal CItemCountLE() : base(VTConditionType.ItemCountLE, TableTypeConstants.SCHEMA_kv) { }
 
@@ -360,9 +360,9 @@ namespace VTMetaLib.VTank
 
 	public class CItemCountGE : VTConditionWithTableData
 	{
-		public string ItemName { get; private set; }
+		public string ItemName { get; internal set; }
 
-		public int Count { get; private set; }
+		public int Count { get; internal set; }
 
 		internal CItemCountGE() : base(VTConditionType.ItemCountGE, TableTypeConstants.SCHEMA_kv) { }
 
@@ -391,11 +391,11 @@ namespace VTMetaLib.VTank
 
 	public class CMobsInDistanceName : VTConditionWithTableData
 	{
-		public string MonsterName { get; private set; }
+		public string MonsterName { get; internal set; }
 
-		public int Count { get; private set; }
+		public int Count { get; internal set; }
 
-		public double Distance { get; private set; }
+		public double Distance { get; internal set; }
 
 		internal CMobsInDistanceName() : base(VTConditionType.MobsInDist_Name, TableTypeConstants.SCHEMA_kv) { }
 
@@ -426,11 +426,11 @@ namespace VTMetaLib.VTank
 
 	public class CMobsInDistancePriority : VTConditionWithTableData
 	{
-		public int Priority { get; private set; }
+		public int Priority { get; internal set; }
 
-		public int Count { get; private set; }
+		public int Count { get; internal set; }
 
-		public double Distance { get; private set; }
+		public double Distance { get; internal set; }
 
 		internal CMobsInDistancePriority() : base(VTConditionType.MobsInDist_Priority, TableTypeConstants.SCHEMA_kv) { }
 
@@ -466,7 +466,7 @@ namespace VTMetaLib.VTank
 
 	public class CNoMobsInRange : VTConditionWithTableData
 	{
-		public double Distance { get; private set; }
+		public double Distance { get; internal set; }
 
 		internal CNoMobsInRange() : base(VTConditionType.NoMobsInDist, TableTypeConstants.SCHEMA_kv) { }
 
@@ -491,7 +491,7 @@ namespace VTMetaLib.VTank
 
 	public class CLandblockE : VTConditionWithScalarData
 	{
-		public int Landblock { get; private set; }
+		public int Landblock { get; internal set; }
 
 		internal CLandblockE() : base(VTConditionType.BlockE) { }
 
@@ -520,7 +520,7 @@ namespace VTMetaLib.VTank
 
 	public class CLandcellE : VTConditionWithScalarData
 	{
-		public int Landcell { get; private set; }
+		public int Landcell { get; internal set; }
 
 		internal CLandcellE() : base(VTConditionType.CellE) { }
 
@@ -559,7 +559,7 @@ namespace VTMetaLib.VTank
 
 	public class CNot : VTConditionWithTableData
 	{
-		public VTCondition Condition { get; private set; }
+		public VTCondition Condition { get; internal set; }
 
 		internal CNot() : base(VTConditionType.Not, TableTypeConstants.SCHEMA_KV) { }
 
@@ -584,7 +584,7 @@ namespace VTMetaLib.VTank
 
 	public class CPSecsInStateGE : VTConditionWithScalarData
 	{
-		public int Seconds { get; private set; }
+		public int Seconds { get; internal set; }
 
 		internal CPSecsInStateGE() : base(VTConditionType.PSecsInStateGE) { }
 
@@ -613,9 +613,9 @@ namespace VTMetaLib.VTank
 
 	public class CSecsOnSpellGE : VTConditionWithTableData
 	{
-		public int SpellId { get; private set; }
+		public int SpellId { get; internal set; }
 
-		public int Seconds { get; private set; }
+		public int Seconds { get; internal set; }
 
 		internal CSecsOnSpellGE() : base(VTConditionType.SecsOnSpellGE, TableTypeConstants.SCHEMA_kv) { }
 
@@ -643,7 +643,7 @@ namespace VTMetaLib.VTank
 
 	public class CBurdenPercentGE : VTConditionWithScalarData
 	{
-		public int Burden { get; private set; }
+		public int Burden { get; internal set; }
 
 		internal CBurdenPercentGE() : base(VTConditionType.BurdenPercentGE) { }
 
@@ -672,7 +672,7 @@ namespace VTMetaLib.VTank
 
 	public class CDistanceToRouteGE : VTConditionWithTableData
 	{
-		public double Distance { get; private set; }
+		public double Distance { get; internal set; }
 
 		internal CDistanceToRouteGE() : base(VTConditionType.DistanceToRouteGE, TableTypeConstants.SCHEMA_kv) { }
 
@@ -698,7 +698,7 @@ namespace VTMetaLib.VTank
 
 	public class CExpr : VTConditionWithTableData
 	{
-		public string Expr { get; private set; }
+		public string Expr { get; internal set; }
 
 		internal CExpr() : base(VTConditionType.Expr, TableTypeConstants.SCHEMA_kv) { }
 
@@ -723,9 +723,9 @@ namespace VTMetaLib.VTank
 
 	public class CChatCapture : VTConditionWithTableData
 	{
-		public string Pattern { get; private set; }
+		public string Pattern { get; internal set; }
 
-		public string ColorIdList { get; private set; }
+		public string ColorIdList { get; internal set; }
 
 		internal CChatCapture() : base(VTConditionType.ChatCapture, TableTypeConstants.SCHEMA_kv) { }
 
