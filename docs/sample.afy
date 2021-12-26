@@ -1,21 +1,18 @@
 # `afy` YAML Meta Definition (top-level)
 
-# Meta
+## Meta
 The top-level object defined in an `afy` file is the `Meta` object and contains, at minimum, some name information and optional free-form key-value pairs for labels, etc.
 
 Underneath the `Meta` are sections to define reusable `NavRoutes` as well as each of the `States` within the meta and its associated `Rules`. 
 
 For more advanced users, there is also the ability to import templateable fragments, or portions of a meta, using the `MetaFragment` and/or `StateFragment` features.
 
-## Properties
-### `ResetState`
-`ResetState` is an optional string (defaults to `Default`) that can be defined for use in other parts of the meta where a hard "meta reset" is desired and the meta being defined wishes to have more control over that transition.
-### `StateFragments`
-`StateFragments` is an optional list of State Fragments (explained later in doc) with a declared `Name` and `Path` for each
-### `MetaFragments`
-`MetaFragments` is an optional list of Meta Fragments (explained later in doc) with a declared `Name` and `Path` for each
+### Properties:
+#### `ResetState` (optional string, defaults to `Default`) can be defined for use in other parts of the meta where a hard "meta reset" is desired and the meta being defined wishes to have more control over that transition.
+#### `StateFragments` is an optional list of State Fragments (explained later in doc) with a declared `Name` and `Path` for each
+#### `MetaFragments` is an optional list of Meta Fragments (explained later in doc) with a declared `Name` and `Path` for each
 
-## Fragments
+### Fragments
 Fragments provide a meta developer to write templatable portions of a meta that can be imported into a concrete `afy` meta file.
 Each fragment is defined externally in a separate `afyf` (afy fragment) file which has a different format from `afy` depending on which tyepe of fragment.
 Every fragment must be declared with a unique `Name` that is referenced throughout the `afy` file. Meta fragments may also provide an optional `StateNamePrefix` that will be prepended to any states generated thru the import statement.
@@ -40,19 +37,14 @@ Nav routes can be defined in multiple ways, based on additional keys beyond the 
 
 ### Common nav route parameters
 
-#### `ReversePoints`
-`ReversePoints: True|False` allows for the reversal of the points in the Nav Route being defined
+#### `Reverse: True|False` allows for the reversal of the Nav Route being defined
 
 #### `Transform` block allows for automatic transformation of the defined Nav Route, e.g. coordinate offset and/or rotation.
 ```
 - Name: "EOMid"
   Path: "navs/eowest.nav"
   Transform:
-  	Translate:
-  		dx: 2.10299
-  		dy: 6.11059
-  		# optional
-  		dz: 0.0000
+  	Translate: 2.10299 6.11059 0.0000
   	Rotate: 72
 ```
 Both the `Translate` (direct coordinate offset) as well as the `Rotate` properties can be used independently or in conjunction with one another. Only one is required in order to use the `Transform` feature.
@@ -76,13 +68,6 @@ If you declare a `Type` key, then you are able to inline nav points similar to h
 	- Vendor: Mr Supplier Npc
 ```
 
-### Inline follow nav route
-```
-- Name: "FollowLeader"
-  Type: Follow
-  Character: "Alastor"
-```
-
 ### Embedded data routes
 Although discouraged in most use cases, a developer can also inline the entire `nav` file contents in their `afy` file by using the `Data` key and providing a string value (recommended to use a string literal block as shown below)
 ```
@@ -100,6 +85,7 @@ States are defined within the `Meta` by a unique `Name` key and are composed of 
 Additional properties may become available / optionally provided within each `States` list entry.
 
 # Meta Rules
+=======================
 
 Rules are defined by providing a list item in the `Rules` property that contains one `Condition` value as well as one `Action` value. Instead of providing a Condition and an Action, a new directive has been introduced for use with State Fragments (see below), since this translates to zero or more `Condition`/`Action` pairs that can be inserted in its place.
 
@@ -107,6 +93,7 @@ Since YAML is used to define `afy` files, the flexible syntax allows for additio
 
 
 ## Conditions
+=======================
 Conditions typically begin a list item in the `Rules` property of an entry in `States`. They begin with a common syntax that must define the Condition Type, since different condition types will have different expected keys/property values for any parameterized conditions.
 ```
 - Condition: CONDTYPE 
@@ -145,7 +132,6 @@ Based on the condition type, there will be additional properties that appear sub
 	Conditions: 
 	- Expr: "getvar[IsLeader]==0"
 	- ChatMessage: "#action follow"
-	- 
 ```
 
 ### Any
@@ -206,10 +192,11 @@ Since `ColorIdList` is allowed to be an empty string, the entire key can be ommi
 - Condition: Death
 ```
 
-### VendorOpen
+### VendorOpened
 ```
-- Condition: VendorOpen
+- Condition: VendorOpened
 ```
+NOTE: this was changed from `VendorOpen` to match the `VendorClosed` condition
 
 ### VendorClosed
 ```
@@ -300,14 +287,6 @@ NOTE: this was changed from `MobsInDist_Name`
 - Condition: DistanceToRouteGE
   Distance: 6.0
 ```
-
-### MetaVersionChanged
-```
-- Condition: MetaVersionChanged
-```
-Special condition that is usable in `afy` metas, and is triggered one-time-only whenever the `Meta.Version` field has changed from the last time it was run. This is accomplished using a `pvar` consisting of the most recently run Meta Version, which is compared against the running `met` MetaVersion on startup. If the last running version is different than the current, `MetaVersionChanged` conditions can be used in `InitState` (or any other states triggered at startup prior to returning to main meta states) and will trigger in this state. 
-
-NOTE: This condition may only occur once in any given `State`, as a `pvar` will be checked/set when the InitState is called for a new version. Until an InitState has triggered its `MetaVersionChanged` rule (if one exists), it is subject to be triggered at any future meta run, regardless of whether all other rules triggered by the `MetaVersionChanged` condition have ALREADY run for the version change in the past.
 
 
 ## Actions
@@ -526,7 +505,7 @@ Meta Fragments are virtually identical to the standard `afy` format, but with a 
 ### Provided template variables:
 All fragments have the following variables available:
 #### `.MetaName` is always provided with the simple name of the `met` file being generated (excluding extension)
-#### `.ResetState` is provided with the name of the state that should be used when a hard reset of the meta is required. This value defaults to `Default` state if none is provided in the `Meta` definition (top-level)
+#### `.ResetStateName` is provided with the name of the state that should be used when a hard reset of the meta is required. This value defaults to `Default` state if none is provided in the `Meta` definition (top-level)
 
 ### Special Fragment-specific `Action` types:
 #### ResetMeta
@@ -547,7 +526,7 @@ Example syntax:
 ```
 MetaFragment:
   FragmentInitState: "InitLandscapeObjects"
-  StateNamePrefix: "_landscape_"
+  Prefix: "_landscape_"
   States:
   - Name: "ScanLandscapeObjects"
     Rules: 
@@ -744,24 +723,3 @@ Meta:
   			Name: "checkstuck"
   			Section: "checktimer"
 ```
-
-
-void WriteAFNodeWithComments(AFNode node, TextWriter textWriter, YamlWriter yamlWriter) {
-	if (node.Comments.Length > 0) {
-		foreach (str line in node.Comments) {
-			textWriter.WriteLine(indent("#", " ", yamlWriter.indent);
-		}
-	}
-	if (node.Children.Length > 0) {
-		yamlWriter.BeginNode(xxx);
-		foreach (var child in node.Children) {
-			WriteAFNodeWithComments(child, textWriter, yamlWriter);
-		}
-		yamlWriter.EndNode(xxx);
-	} else {
-		yamlWriter.Write(node.ToYaml());
-	}
-	if (node.Children.Length > 0) {
-		yamlWriter.EndNode(xxx);
-	}
-}

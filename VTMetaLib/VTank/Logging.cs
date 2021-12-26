@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using log4net;
+using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
@@ -99,19 +100,6 @@ namespace VTMetaLib.VTank
             }
 
             return msg.ToString();
-        }
-
-        public static readonly string SPACES = "                                                                                         ";
-
-        public static string Indent(string str, int indentation)
-        {
-            while (indentation > 0)
-            {
-                int appended = indentation >= SPACES.Length ? SPACES.Length : indentation;
-                str = SPACES.Substring(0, appended) + str;
-                indentation -= appended;
-            }
-            return str;
         }
     }
 }
