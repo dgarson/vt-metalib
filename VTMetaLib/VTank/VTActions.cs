@@ -100,6 +100,7 @@ namespace VTMetaLib.VTank
 
 	public class ANone : VTActionWithZeroData
 	{
+		public static readonly ANone Instance = new ANone();
 		public ANone() : base(VTActionType.None) { }
 	}
 
@@ -199,6 +200,11 @@ namespace VTMetaLib.VTank
 
 		internal AEmbedNav() : base(VTActionType.EmbedNav) { }
 
+		internal AEmbedNav(VTNavRoute navRoute) : this()
+        {
+			NavRoute = navRoute;
+        }
+
 		public AEmbedNav(byte[] bytes) : this()
 		{
 			SetData(Encoding.UTF8.GetString(bytes));
@@ -297,6 +303,8 @@ namespace VTMetaLib.VTank
 
 	public class AReturn : VTActionWithZeroData
 	{
+		public static readonly AReturn Instance = new AReturn();
+
 		public AReturn() : base(VTActionType.Return) { }
 	}
 
@@ -385,6 +393,8 @@ namespace VTMetaLib.VTank
 
 	public class AClearWatchdog : VTActionWithTableData
     {
+		public static readonly AClearWatchdog Instance = new AClearWatchdog();
+
 		public AClearWatchdog() : base(VTActionType.ClearWatchdog, TableTypeConstants.SCHEMA_kv) { }
 
         protected override void PopulateTable(VTTable table) { }
@@ -513,6 +523,8 @@ namespace VTMetaLib.VTank
 
 	public class ADestroyAllViews : VTActionWithTableData
 	{
+		public static readonly ADestroyAllViews Instance = new ADestroyAllViews();
+
 		public ADestroyAllViews() : base(VTActionType.DestroyAllViews, TableTypeConstants.SCHEMA_kv) { }
 
 		protected override void PopulateTable(VTTable table) { }
@@ -530,23 +542,23 @@ namespace VTMetaLib.VTank
 		{
 			switch (type)
 			{
-				case VTActionType.Unassigned: return new ANone();
-				case VTActionType.None: return new ANone();
+				case VTActionType.Unassigned: throw file.MalformedFor($"Unassigned action id {(int)type} is unsupported");
+				case VTActionType.None: return ANone.Instance;
 				case VTActionType.Expr: return new AExprAction();
 				case VTActionType.SetState: return new ASetState();
 				case VTActionType.ChatCommand: return new AChatCommand();
 				case VTActionType.All: return new AAll();
 				case VTActionType.EmbedNav: return new AEmbedNav();
 				case VTActionType.CallState: return new ACallState();
-				case VTActionType.Return: return new AReturn();
+				case VTActionType.Return: return AReturn.Instance;
 				case VTActionType.ChatExpr: return new AChatExpr();
 				case VTActionType.SetWatchdog: return new ASetWatchdog();
-				case VTActionType.ClearWatchdog: return new AClearWatchdog();
+				case VTActionType.ClearWatchdog: return AClearWatchdog.Instance;
 				case VTActionType.GetOpt: return new AGetOpt();
 				case VTActionType.SetOpt: return new ASetOpt();
 				case VTActionType.CreateView: return new ACreateView();
 				case VTActionType.DestroyView: return new ADestroyView();
-				case VTActionType.DestroyAllViews: return new ADestroyAllViews();
+				case VTActionType.DestroyAllViews: return ADestroyAllViews.Instance;
 				default:
 					throw file.MalformedFor($"No such ATypeID = {type} ({(int)type})");
 			}

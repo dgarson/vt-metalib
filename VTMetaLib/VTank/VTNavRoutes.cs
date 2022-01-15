@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -488,6 +489,12 @@ namespace VTMetaLib.VTank
             navRoute.ReadFrom(file);
             NavRoutesLoaded++;
             return navRoute;
+        }
+
+        public static VTNavRoute LoadNavRoute(string content, bool skipHeader = false)
+        {
+            LineReadable readable = InMemoryLines.ReadAllFrom(new StringReader(content));
+            return LoadNavRoute(readable, skipHeader);
         }
 
         public static VTNavRoute ParseEmbeddedNavRoute(string content)

@@ -113,6 +113,8 @@ namespace VTMetaLib.VTank
 	/// </summary>
 	public class CNever : VTConditionWithZeroData
 	{
+		public static readonly CNever Instance = new CNever();
+
 		public CNever() : base(VTConditionType.Never) { }
     }
 
@@ -125,6 +127,8 @@ namespace VTMetaLib.VTank
 	/// </summary>
 	public class CAlways : VTConditionWithZeroData
 	{
+		public static readonly CAlways Instance = new CAlways();
+
 		public CAlways() : base(VTConditionType.Always) { }
     }
 
@@ -310,21 +314,29 @@ namespace VTMetaLib.VTank
 
 	public class CNavEmpty : VTConditionWithZeroData
 	{
+		public static readonly CNavEmpty Instance = new CNavEmpty();
+
 		public CNavEmpty() : base(VTConditionType.NavEmpty) { }
     }
 
 	public class CDeath : VTConditionWithZeroData
 	{
+		public static readonly CDeath Instance = new CDeath();
+
 		public CDeath() : base(VTConditionType.Death) { }
     }
 
 	public class CVendorOpen : VTConditionWithZeroData
 	{
+		public static readonly CVendorOpen Instance = new CVendorOpen();
+
 		public CVendorOpen() : base(VTConditionType.VendorOpen) { }
 	}
 
 	public class CVendorClosed : VTConditionWithZeroData
 	{
+		public static readonly CVendorClosed Instance = new CVendorClosed();
+
 		public CVendorClosed() : base(VTConditionType.VendorClosed) { }
 	}
 
@@ -462,6 +474,8 @@ namespace VTMetaLib.VTank
 
 	public class CNeedToBuff : VTConditionWithZeroData
 	{
+		public static readonly CNeedToBuff Instance = new CNeedToBuff();
+
 		public CNeedToBuff() : base(VTConditionType.NeedToBuff) { }
 	}
 
@@ -550,11 +564,15 @@ namespace VTMetaLib.VTank
 
 	public class CPortalEnter : VTConditionWithZeroData
 	{
+		public static readonly CPortalEnter Instance = new CPortalEnter();
+
 		public CPortalEnter() : base(VTConditionType.PortalEnter) { }
     }
 
 	public class CPortalExit : VTConditionWithZeroData
 	{
+		public static readonly CPortalExit Instance = new CPortalExit();
+
 		public CPortalExit() : base(VTConditionType.PortalExit) { }
 	}
 
@@ -759,24 +777,24 @@ namespace VTMetaLib.VTank
 		{
 			switch (type)
 			{
-				case VTConditionType.Unassigned: return new CUnassigned();
-				case VTConditionType.Never: return new CNever();
-				case VTConditionType.Always: return new CAlways();
+				case VTConditionType.Unassigned: throw file.MalformedFor("Unassigned Condition is not supported");
+				case VTConditionType.Never: return CNever.Instance;
+				case VTConditionType.Always: return CAlways.Instance;
 				case VTConditionType.All: return new CAll();
 				case VTConditionType.Any: return new CAny();
 				case VTConditionType.Expr: return new CExpr();
 				case VTConditionType.ChatMatch: return new CChatMatch();
 				case VTConditionType.MainSlotsLE: return new CMainSlotsLE();
 				case VTConditionType.SecsInStateGE: return new CSecsInStateGE();
-				case VTConditionType.Death: return new CDeath();
-				case VTConditionType.NavEmpty: return new CNavEmpty();
-				case VTConditionType.VendorOpen: return new CVendorOpen();
-				case VTConditionType.VendorClosed: return new CVendorClosed();
+				case VTConditionType.Death: return CDeath.Instance;
+				case VTConditionType.NavEmpty: return CNavEmpty.Instance;
+				case VTConditionType.VendorOpen: return CVendorOpen.Instance;
+				case VTConditionType.VendorClosed: return CVendorClosed.Instance;
 				case VTConditionType.ItemCountLE: return new CItemCountLE();
 				case VTConditionType.ItemCountGE: return new CItemCountGE();
 				case VTConditionType.MobsInDist_Name: return new CMobsInDistanceName();
 				case VTConditionType.MobsInDist_Priority: return new CMobsInDistancePriority();
-				case VTConditionType.NeedToBuff: return new CNeedToBuff();
+				case VTConditionType.NeedToBuff: return CNeedToBuff.Instance;
 				case VTConditionType.NoMobsInDist: return new CNoMobsInRange();
 				case VTConditionType.BlockE: return new CLandblockE();
 				case VTConditionType.CellE: return new CLandcellE();

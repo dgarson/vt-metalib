@@ -136,7 +136,7 @@ Based on the condition type, there will be additional properties that appear sub
 ```
 - Condition: Not
   - Condition: Expr
-    Expression: "getvar[NeedsAugs]==1"
+    Expr: "getvar[NeedsAugs]==1"
 ```
 
 ### All
@@ -159,7 +159,7 @@ Based on the condition type, there will be additional properties that appear sub
 ### Expr
 ```
 - Condition: Expr
-  Expression: "getvar[IsLeader]==0"
+  Expr: "getvar[IsLeader]==0"
 ```
 
 ### ChatMatch
@@ -285,6 +285,8 @@ NOTE: this was changed from `MobsInDist_Name`
 - Condition: SecsOnSpellGE
   SpellId: 60123
   SpellName: "Incantation of Fire Protection Self" (??)
+  # 15 minutes
+  Seconds: 900
 ```
 `SpellId` and `SpellName` are mutually exclusive. Any `SpellName` used will be resolved to a `SpellId` at `met` generation time. If the spell cannot be found, an error will be produced.
 
@@ -332,7 +334,7 @@ or if inside an `All` block:
 ### Chat
 ```
   Action: Chat
-    Message: "/ub playeroption AllowGive false"
+    Text: "/ub playeroption AllowGive false"
 ```
 or if inside an `All` block:
 ```
@@ -343,7 +345,7 @@ or if inside an `All` block:
 ```
   Action: All
   - Action: Expr
-    Expression: "setvar[Started, 1]"
+    DoExpr: "setvar[Started, 1]"
   - Action: Chat
     Message: "/ub opt set VTank.PatchExpressionEngine true"
   - Action: SetState
@@ -374,6 +376,7 @@ while also supporting...
 ```
   - EmbedNav:
 	    Name: "Hunting"
+      Label: "[Hunting]"
 	    Reverse: True
 	    Transform:
 	     	Translate: 2.10299 6.11059 0.0000
@@ -395,7 +398,7 @@ while also supporting...
 ### Expr
 ```
   Action: Expr
-    Expression: "setvar[Started, 1]"
+    Expr: "setvar[Started, 1]"
 ```
 (equivalent of `DoExpr` in original `metaf`)
 
@@ -407,7 +410,7 @@ If inside an `All` block, you can use the shorthand form:
 ### ChatExpr
 ```
   Action: ChatExpr
-    Expression: "Dsdfsdfasdf"
+  Expr: "chatbox[\/w +getcharstringprop[1]+, Hello world]"
 ```
 or shorthand if nested in an `All` block:
 ```
@@ -470,6 +473,63 @@ or shorthand if nested in `All`:
 ```
   Action: DestroyAllViews
 ```
+
+### ImportFragment
+```
+  Action: ImportFragment
+    Name: CheckStuck
+    Vars:
+    - Name: ReturnToState
+      Value: "NavTo"
+```
+
+### ClearFragmentVars
+```
+  Action: ClearFragmentVars
+```
+
+### SetManagedVars
+Sets one or more variables to 
+```
+  Action: SetManagedVars
+    Vars:
+    - Name: GetAug
+      Value: "1"
+    - Name: NavTo_Started
+      Value: "1"
+    - Name: NavTo_BotRequest
+      ValueList: 
+      # portal bot keyword
+      - crater
+      # expected landcell (hex)
+      - 90D00107
+```
+
+### RegisterManagedVars
+Registers one or more var names to clear on state transitions, without setting a value.
+For use with multiple variable names, you can use the syntax:
+```
+  Action: RegisterManagedVars
+    Names: 
+    - GetAug
+    - NavTo_Started
+        ...
+    - NavTo_UsingPortal
+
+```
+or for a single var name, you can use the shorthand:
+```
+  Action: RegisterManagedVars
+    Name: NavTo_Started
+```
+
+
+### ClearManagedVars
+Clears all variables that were set for the current state (by name) based on all occurrences of the `SetManagedVars` rules for that state.
+```
+  Action: ClearManagedVars
+```
+
 
 # Custom Value Types
 Due to the flexibility of YAML, `afy` files are able to use custom value types that do not map directly to VTank Meta constructs directly, and some of which may dependencies on additional plugins, specifically UtilityBelt.
@@ -546,24 +606,56 @@ Meta Fragments are defined at the top-level, alongside State Fragments, but do n
 Example syntax:
 ```
 MetaFragment:
+  Name: "LandscapeObjects"
   FragmentInitState: "InitLandscapeObjects"
-  StateNamePrefix: "_landscape_"
+  StateNamePrefix: "LandscapeObjects_"
+  # complete states that will be rendered in the parent meta/afy
   States:
-  - Name: "ScanLandscapeObjects"
+  # the rendered state name will be prefixed with StateNamePrefix if defined, e.g. this will become 'LandscapeObjects_ScanNearby'
+  - Name: "ScanNearby"
     Rules: 
     - Condition: ... 
       Action: ...
   	- ...
   	- ...
 
-	- Name: "CheckLandscapeBlacklist"
+  # the rendered state name will be prefixed with StateNamePrefix if defined, e.g. this will become 'LandscapeObjects_CheckBlacklist'
+	- Name: "CheckBlacklist"
 	    ...
-
-  - Name: "UseLandscapeObject"
+  # the rendered state name will be prefixed with StateNamePrefix if defined, e.g. this will become 'LandscapeObjects_UseObject'
+  - Name: "UseObject"
       ...
+  # optional list of state fragments that are part of this meta fragment
+  StateFragmentSections:
+  - Name: ScanIfNeeded
+    Rules:
+    - Condition: Expr
+      Expr: "testvar[LandscapeObjects_ScanStopwatch]==0"
+      Action: All
+      - Action: SetManagedVars
+          Vars:
+      - Action: Expr
+          Expr: "setvar[LandscapeObjects_ScanStopwatch, stopwatchstart[stopwatchcreate[]]]"
+    - Condition: All
+      - Condition: Expr
+        Expr: "testvar[LandscapeObjects_ScanStopwatch]"
+      - Condition: Expr
+        Expr: "stopwatchelapsedseconds[$LandscapeObjects_ScanStopwatch]>=$LandscapeObjects_ScanIntervalSecs"
+      Action: SetState
+        # if this state is defined in this meta fragment, then it will be prepended with StateNamePrefix!
+        State: ScanNearby
+    # optional list of vars to clear on state transitions
+    #   if you use a SetManagedVars action, this is merged into the list of vars cleared on state transitions
+    ClearVarsOnChange: 
+    - LandscapeObjects_scan_index
+    - LandscapeObjects_NearbyObj
+    - LandscapeObjects_NavStopwatch
+        ...
+    - LandscapeObjects_UseStopwatch
+
   NavRoutes:
-  - Name: "NavToQuestNpc"
-    Path: "navs/landscape_goto_npc.nav"
+  - Name: "NavToPricklyPearNPC"
+    Path: "navs/landscape_goto_pricklypear_npc.nav"
   - Name: "EmptyNav"
     	...
 ```
@@ -590,9 +682,25 @@ This is a Helper Action that is expanded into zero or more actions that will cle
 Example syntax:
 ```
 StateFragment:
+  Name: "MuleCheck"
   FragmentInitState: "InitMuleList"
   NavRoutes:
-  - 
+  - Name: "NavToMuleFromDrop"
+    Path: "navs/hometown_to_mules.nav"
+  States:
+  # the rendered state name will be prefixed with StateNamePrefix if defined, e.g. this will become 'MuleCheck_GoToMules'
+  - Name: GoToMules
+    Rules: 
+        ...
+  Sections:
+  - Name: ShouldMule
+    Rules: 
+    - Condition: MainSlotsLE
+        Slots: 12
+      Action: SetState
+        State: GoToMules
+  - Name: ...
+
 ```
 
 
@@ -700,7 +808,7 @@ Meta:
 			- Action: SetOpt
 				Name: "EnableNav"
 				Value: true
-		- ImportFragment
+		- Do: ImportFragment
 				Name: "checkstuck"
 			  Section: "distcheck"
 			  Vars:
@@ -740,7 +848,7 @@ Meta:
   		  Name: "EmptyNav"
   		- Action: SetState
   			Name: "Stipend"
-  	- ImportFragment
+  	- Do: ImportFragment
   			Name: "checkstuck"
   			Section: "checktimer"
 ```

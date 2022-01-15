@@ -1,0 +1,42 @@
+# Inline comments are standard YAML format
+# blah blah blah
+
+# empty lines are fine too
+#
+Meta:
+  Name: "AugGem"
+  Metadata:
+    Version: "0.0.1"
+    Author: "Alastor"
+  InitState: "**SetVars**"
+  InitStates:
+  - "NavTo"
+  States:
+  - Name: "NavTo"
+    Rules:
+    - Condition: All
+      Conditions:
+      - Condition: Expr
+        Expr: "getvar[GetAug]==1"
+      - Condition: NavEmpty
+      Action: Chat
+        Message: "Getting my aug gem!"
+    - Condition:
+        Condition: Expr
+        Expr: "getvar[NavActive]==0"
+      Action:
+        Action: All
+        Actions:
+        - Action: Chat
+          Message: "May it be known... Here I go!"
+        - Action: Expr
+          Expr: "setvar[NavActive, 1]"
+        - Action: SetOpt
+          Name: "EnableBuffing"
+          Value: true # ?? or int?
+        - Action: SetOpt
+          Name: "EnableCombat"
+          Value: false
+        - Action: SetOpt
+          Name: "EnableNav"
+          Value: true

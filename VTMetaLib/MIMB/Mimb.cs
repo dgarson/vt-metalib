@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Xml;
 using VTMetaLib.VTank;
+using VTMetaLib.IO;
 
 namespace VTMetaLib.MIMB
 {

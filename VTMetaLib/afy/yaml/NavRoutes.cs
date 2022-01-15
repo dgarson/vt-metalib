@@ -10,10 +10,20 @@ using VTMetaLib.Data;
 
 namespace VTMetaLib.afy.yaml
 {
-    
+    public enum AfyNavRouteType
+    {
+        File,
+        Data,
+        Linear,
+        Circular,
+        Follow,
+        Once,
+    }
 
+    /// <summary>
+    /// Definition for a Nav Route that is used/referenced within a AfyMeta by name.
+    /// </summary>
     public class AfyNavRouteDefinition
-
     {
         /// <summary>
         /// Required name for this nav route, which is referenced by any `EmbedNav` actions throughout the meta.
@@ -26,7 +36,7 @@ namespace VTMetaLib.afy.yaml
         /// NOTE: This is a required field only for the inlined nav route defining points inside an `afy` file. If this is not provided, it is inferred
         /// when `Path` or `Data`, or `Follow` fields being provided.
         /// </summary>
-        public AfyNavType Type { get; set; }
+        public AfyNavRouteType Type { get; set; }
 
         /// <summary>
         /// Option to reverse the nav route point sequence
@@ -59,6 +69,14 @@ namespace VTMetaLib.afy.yaml
         public List<Dictionary<string, string>> Points { get; set; }
 
         // TODO ways to convert this to the actual Data for a Nav Route!!! (bytes)
+    }
+
+    public class RouteTransform
+    {
+        public Double dx;
+        public Double dy;
+        // optional, will never fail null-check
+        public Double dz = 0d;
     }
 
     public enum AfNavPointType
@@ -493,13 +511,5 @@ namespace VTMetaLib.afy.yaml
                 throw new ArgumentException($"non-boolean value for HoldShift in Jump nav " +
                     $"point: {dataTokens[1]} (parsed as '{dataTokens[1].ToLower()}')");
         }
-    }
-
-    public class RouteTransform
-    {
-        public Double dx;
-        public Double dy;
-        // optional, will never fail null-check
-        public Double dz = 0d;
     }
 }

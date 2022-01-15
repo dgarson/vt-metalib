@@ -8,9 +8,15 @@ using YamlDotNet;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using VTMetaLib.VTank;
 
 namespace VTMetaLib.afy.IO
 {
+    public class AfyMetaConverter
+    {
+        
+    }
+
     public class AfyWriter : IDisposable
     {
         private readonly StreamWriter textWriter;
@@ -35,11 +41,13 @@ namespace VTMetaLib.afy.IO
             textWriter.WriteLine($"# {comment}");
         }
 
+        /*
         public void WriteFile(AfyFile file)
         {
             // TODO :
             // serializer.Serialize()
         }
+        */
 
         public void Dispose()
         {

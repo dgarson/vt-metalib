@@ -4,47 +4,70 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VTMetaLib.afy.yaml;
+using VTMetaLib.VTank;
+using YamlDotNet.Serialization;
 
 namespace VTMetaLib.afy.Model
 {
-    public abstract class AfyAction : AfyEntity
+    public abstract class AfyAction : AfyEntityMetadata, AfyEntity
     {
+        [YamlIgnore]
         public abstract AfyActionType ActionType { get; }
 
+        [YamlIgnore]
         public AfyEntity Parent { get; internal set; }
-        public Dictionary<string, string> Metadata { get; internal set; }
 
-        public bool HasMetadata => Metadata != null && Metadata.Count > 0;
+        public abstract VTAction AsVTAction(AfyYamlContext context);
 
-        public string this[string key]
+    }
+
+    public class AfyActionTypes
+    {
+        public static readonly Dictionary<AfyActionType, Type> ActionTypeToModelClass = new Dictionary<AfyActionType, Type>();
+
+        static AfyActionTypes()
         {
-            get
-            {
-                if (Metadata == null)
-                    return null;
-                return Metadata[key];
-            }
-            set
-            {
-                if (Metadata == null)
-                    Metadata = new Dictionary<string, string>();
-                Metadata[key] = value;
-            }
-        }
+            ActionTypeToModelClass.Add(AfyActionType.None, typeof(NoneAction));
+            ActionTypeToModelClass.Add(AfyActionType.All, typeof(AllAction));
 
-        public bool ContainsMetadata(string key)
-        {
-            return Metadata != null && Metadata.ContainsKey(key);
+            ActionTypeToModelClass.Add(AfyActionType.SetState, typeof(SetState));
+            ActionTypeToModelClass.Add(AfyActionType.CallState, typeof(CallState));
+            ActionTypeToModelClass.Add(AfyActionType.Return, typeof(ReturnAction));
+
+            ActionTypeToModelClass.Add(AfyActionType.Chat, typeof(ChatCommand));
+            ActionTypeToModelClass.Add(AfyActionType.ChatExpr, typeof(ChatExpr));
+            ActionTypeToModelClass.Add(AfyActionType.EmbedNav, typeof(EmbedNav));
+            ActionTypeToModelClass.Add(AfyActionType.Expr, typeof(ExprAct));
+
+            ActionTypeToModelClass.Add(AfyActionType.GetOpt, typeof(GetOpt));
+            ActionTypeToModelClass.Add(AfyActionType.SetOpt, typeof(SetOpt));
+
+            ActionTypeToModelClass.Add(AfyActionType.SetWatchdog, typeof(SetWatchdog));
+            ActionTypeToModelClass.Add(AfyActionType.ClearWatchdog, typeof(ClearWatchdog));
+
+            ActionTypeToModelClass.Add(AfyActionType.CreateView, typeof(CreateView));
+            ActionTypeToModelClass.Add(AfyActionType.DestroyView, typeof(DestroyView));
+            ActionTypeToModelClass.Add(AfyActionType.DestroyAllViews, typeof(DestroyAllViews));
+
+            ActionTypeToModelClass.Add(AfyActionType.ImportFragment, typeof(ImportFragment));
+            ActionTypeToModelClass.Add(AfyActionType.ClearFragmentVars, typeof(ClearFragmentVars));
+
+            ActionTypeToModelClass.Add(AfyActionType.SetManagedVars, typeof(SetManagedVars));
+            ActionTypeToModelClass.Add(AfyActionType.ClearManagedVars, typeof(ClearManagedVars));
         }
     }
 
-    public class AfyAllAction : AfyAction, AfyEntityWithChildren<AfyAction>
+    public static class AfyActionTypeExtensions
     {
-        public List<AfyAction> Actions { get; internal set; } = new List<AfyAction>();
 
-        public override AfyActionType ActionType => AfyActionType.All;
-
-        public List<AfyAction> Children => Actions;
+        public static Type GetActionTypeModelClass(this AfyActionType actionType)
+        {
+            Type type;
+            if (AfyActionTypes.ActionTypeToModelClass.TryGetValue(actionType, out type))
+                return type;
+            throw new ArgumentException($"Unrecognized ActionType: {actionType}");
+        }
     }
 
     public enum AfyActionType
@@ -107,7 +130,16 @@ namespace VTMetaLib.afy.Model
         ImportFragment,
 
         [Description("Clear Vars for a State Transition")]
-        ClearStateVars,
+        ClearFragmentVars,
+
+        [Description("Set Managed State Vars")]
+        SetManagedVars,
+
+        [Description("Registers Managed State Vars by name")]
+        RegisterManagedVars,
+
+        [Description("Clear Managed State Vars")]
+        ClearManagedVars,
 
         #endregion
 

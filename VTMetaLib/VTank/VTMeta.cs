@@ -11,7 +11,16 @@ namespace VTMetaLib.VTank
     {
         public int TypeId => 0;
 
-        public List<VTRule> Rules { get; } = new List<VTRule>();
+        public List<VTRule> Rules
+        {
+            get
+            {
+                List<VTRule> allRules = new List<VTRule>();
+                foreach (List<VTRule> stateRules in States.Values)
+                    allRules.AddRange(stateRules);
+                return allRules;
+            }
+        }
 
         public Dictionary<string, List<VTRule>> States { get; } = new Dictionary<string, List<VTRule>>();
 
