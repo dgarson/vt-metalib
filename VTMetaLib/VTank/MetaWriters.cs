@@ -3,20 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace VTMetaLib.VTank
 {
     public class MetaFileBuilder
     {
         private StringBuilder lineBuilder = new StringBuilder();
+        private List<string> lines = new List<string>();
 
-        public MetaFile File
-        {
-            get
-            {
-                return FileContext.MetaFile;
-            }
-        }
 
         public MetaFileContext FileContext { get; private set; }
 
@@ -37,36 +32,17 @@ namespace VTMetaLib.VTank
             FileContext = context;
         }
 
-        /// <summary>
-        /// Begins writing the next line, resetting the column number and the line builder. If there is any
-        /// line that was already being built, this will add it to FileLines, by default, prior to beginning
-        /// this next line.
-        /// </summary>
-        public void BeginWritingNextLine(bool writeCurrentLineIfNotEmpty = true)
+        public void FlushToDisk(string path)
         {
-            if (writeCurrentLineIfNotEmpty && lineBuilder.Length > 0)
-                AddLineFromBuilder();
-
-            File.Column = 0;
-            lineBuilder.Clear();
-        }
-
-        /// <summary>
-        /// Appends the given string to the current line that is being built. This does not yet add it to the
-        /// FileLines, as the line is not considered complete yet. The corresponding Column number is incremented
-        /// by 1 as a result.
-        public void WriteChar(char ch)
-        {
-            // if we encounter a newline, that should always flush the current line to the file/buffer
-            if (ch == '\n')
+            if (File.Exists(path))
+                Loggers.WriterLog.Info($"Overwriting existing meta file while writing: {path}");
+            Loggers.WriterLog.Info($"Writing meta to file: {path}...");
+            using (StreamWriter writer = new StreamWriter(path, false))
             {
-                // TODO: log this
-                FinishWritingLine(true);
-                return;
+                // simply write the current FileLines to the target path
+                writer.Write(string.Join("\r\n", lines));
             }
-
-            lineBuilder.Append(ch);
-            File.Column++;
+            Loggers.WriterLog.Info($"Finished writing meta file: {path}");
         }
 
         /// <summary>
@@ -77,7 +53,6 @@ namespace VTMetaLib.VTank
         public void WriteString(string str)
         {
             lineBuilder.Append(str);
-            File.Column += str.Length;
         }
 
         /// <summary>
@@ -113,10 +88,10 @@ namespace VTMetaLib.VTank
 
         internal void AddLineToEnd(string line)
         {
-            File.Lines.Add(line);
-            File.LineNumber++;
-            File.Column = 0;
+            lines.Add(line);
             lineBuilder.Clear();
         }
+
+
     }
 }

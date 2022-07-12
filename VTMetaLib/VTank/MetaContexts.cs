@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using log4net;
 
+using VTMetaLib.IO;
+
 namespace VTMetaLib.VTank
 {
     public class MetaContext
@@ -22,6 +24,11 @@ namespace VTMetaLib.VTank
             {
                 return FileContext.MetaFile;
             }
+        }
+
+        public SeekableCharStream Reader
+        {
+            get => MetaFile.Reader;
         }
 
         /// <summary>
@@ -155,12 +162,12 @@ namespace VTMetaLib.VTank
         /// <returns></returns>
         public MalformedMetaException MalformedFor(string message)
         {
-            return new MalformedMetaException(MetaFile, message);
+            return new MalformedMetaException(MetaFile.Reader, message);
         }
 
         public MetaElementNotFoundException NotFound(string message)
         {
-            return new MetaElementNotFoundException(MetaFile, message);
+            return new MetaElementNotFoundException(MetaFile.Reader, message);
         }
     }
 

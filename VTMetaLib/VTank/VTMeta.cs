@@ -7,6 +7,11 @@ using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
+    public static class VTMetaConstants
+    {
+        public const string SYNTHETIC_META_TABLE_TYPE_NAME = "meta";
+    }
+
     public class VTMeta : VTEncodable
     {
         public int TypeId => 0;
@@ -51,25 +56,25 @@ namespace VTMetaLib.VTank
             return table;
         }
 
-        public void ReadDataFrom(LineReadable file)
+        public void ReadDataFrom(SeekableCharStream reader)
         {
-            LineCount = file.Lines.Count;
-
-            int tableCount = file.ReadAndParseInt(typeof(VTMeta), "meta tableCount");
+            int tableCount = reader.ReadAndParseInt(typeof(VTMeta), "meta tableCount");
             if (tableCount != 1)
-                throw file.MalformedFor($"Expected top-level tableCount to be 1 (one meta) but got {tableCount}");
+                throw reader.MalformedFor($"Expected top-level tableCount to be 1 (one meta) but got {tableCount}");
 
-            string tableName = file.ReadNextLine(typeof(VTMeta), "meta tableName");
-            VTTable table = file.ReadVTTable("meta", tableName);
-            ReadFromData(file, table);
+            string tableName = reader.ReadNextLine(typeof(VTMeta), "meta tableName");
+            VTTable table = reader.ReadVTTable(VTMetaConstants.SYNTHETIC_META_TABLE_TYPE_NAME, false, tableName);
+            ReadFromData(file: reader, table);
+
+            LineCount = reader.Lines.Count;
         }
 
-        public void ReadFrom(MetaFile metaFile)
+        public void ReadFrom(SeekableCharStream reader)
         {
-            ReadDataFrom(metaFile);
+            ReadDataFrom(reader: reader);
         }
 
-        public void ReadFromData(LineReadable file, VTDataType data)
+        public void ReadFromData(SeekableCharStream file, VTDataType data)
         {
             VTTable table = data as VTTable;
             if (table.ColumnCount != 5)
@@ -84,10 +89,10 @@ namespace VTMetaLib.VTank
                 VTActionType actionType = (VTActionType)row[1].GetValue();
 
                 VTCondition cond = condType.NewCondition(file);
-                cond.ReadFromData(file, row[2]);
+                cond.ReadFromData(file: file, row[2]);
 
                 VTAction action = actionType.NewAction(file);
-                action.ReadFromData(file, row[3]);
+                action.ReadFromData(file: file, row[3]);
 
                 string stateName = row[4].GetValueAsString();
 

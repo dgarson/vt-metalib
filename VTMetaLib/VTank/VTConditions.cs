@@ -78,8 +78,8 @@ namespace VTMetaLib.VTank
         }
 
 		public abstract VTDataType AsVTData();
-		public abstract void ReadDataFrom(LineReadable file);
-		public abstract void ReadFromData(LineReadable file, VTDataType data);
+		public abstract void ReadDataFrom(SeekableCharStream file);
+		public abstract void ReadFromData(SeekableCharStream file, VTDataType data);
 
         public void WriteTo(MetaFileBuilder writer)
         {
@@ -164,14 +164,14 @@ namespace VTMetaLib.VTank
 				table.AddTwoColRow(new VTInteger(cond.TypeId), cond.AsVTData());
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			foreach (VTTableRow row in table.Rows)
 			{
 				VTInteger ctypeVal = row["K"] as VTInteger;
 				VTConditionType ctype = (VTConditionType)ctypeVal.Value;
 				VTCondition cond = ctype.NewCondition(file);
-				cond.ReadFromData(file, row["V"]);
+				cond.ReadFromData(file: file, row["V"]);
 
 				Children.Add(cond);
 			}
@@ -210,14 +210,14 @@ namespace VTMetaLib.VTank
 				table.AddTwoColRow(new VTInteger(cond.TypeId), cond.AsVTData());
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			foreach (VTTableRow row in table.Rows)
 			{
 				VTInteger ctypeVal = row["K"] as VTInteger;
 				VTConditionType ctype = (VTConditionType)ctypeVal.Value;
 				VTCondition cond = ctype.NewCondition(file);
-				cond.ReadFromData(file, row["V"]);
+				cond.ReadFromData(file: file, row["V"]);
 
 				Children.Add(cond);
 			}
@@ -237,10 +237,9 @@ namespace VTMetaLib.VTank
 			MatchText = text;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file,
-				file.ReadExpectedData(typeof(CChatMatch), typeof(VTString)) as VTString);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(CChatMatch), typeof(VTString)) as VTString);
 		}
 
 		public override VTDataType AsVTData()
@@ -248,7 +247,7 @@ namespace VTMetaLib.VTank
 			return new VTString(MatchText);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			MatchText = data.GetValueAsString();
         }
@@ -265,10 +264,9 @@ namespace VTMetaLib.VTank
 			Slots = slots;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file, 
-				file.ReadExpectedData(typeof(CMainSlotsLE), typeof(VTInteger)) as VTInteger);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(CMainSlotsLE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -276,7 +274,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Slots);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			var slots = data as VTInteger;
             Slots = slots.Value;
@@ -294,10 +292,9 @@ namespace VTMetaLib.VTank
 			Seconds = secs;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file, 
-				file.ReadExpectedData(typeof(CSecsInStateGE), typeof(VTInteger)) as VTInteger);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(CSecsInStateGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -305,7 +302,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Seconds);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			VTInteger secsVal = data as VTInteger;
 			Seconds = secsVal.Value;
@@ -360,7 +357,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTInteger(Count));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountLE");
@@ -391,7 +388,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTInteger(Count));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CItemCountGE");
@@ -426,7 +423,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 3)
 				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistanceName");
@@ -461,7 +458,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 3)
 				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for CMobsInDistancePriority");
@@ -495,7 +492,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("r"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for CNoMobsInRange");
@@ -515,10 +512,10 @@ namespace VTMetaLib.VTank
 			Landblock = landblock;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
 			var lb = file.ReadExpectedData(typeof(CLandblockE), typeof(VTInteger)) as VTInteger;
-			ReadFromData(file, lb);
+			ReadFromData(file: file, lb);
 		}
 
 		public override VTDataType AsVTData()
@@ -526,7 +523,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Landblock);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			var lb = data as VTInteger;
 			Landblock = lb.Value;
@@ -544,10 +541,10 @@ namespace VTMetaLib.VTank
 			Landcell = landcell;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
 			var lc = file.ReadExpectedData(typeof(CLandcellE), typeof(VTInteger)) as VTInteger;
-			ReadFromData(file, lc);
+			ReadFromData(file: file, lc);
 		}
 
 		public override VTDataType AsVTData()
@@ -555,7 +552,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Landcell);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			var lc = data as VTInteger;
 			Landcell = lc.Value;
@@ -592,11 +589,11 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTInteger(Condition.TypeId), Condition.AsVTData());
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
             VTConditionType ctype = (VTConditionType)table[0][0].GetValue();
 			VTCondition cond = ctype.NewCondition(file);
-			cond.ReadFromData(file, table[0][1]);
+			cond.ReadFromData(file: file, table[0][1]);
 			Condition = cond;
         }
     }
@@ -612,10 +609,9 @@ namespace VTMetaLib.VTank
 			Seconds = seconds;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file,
-				file.ReadExpectedData(typeof(CPSecsInStateGE), typeof(VTInteger)) as VTInteger);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(CPSecsInStateGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -623,7 +619,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Seconds);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			VTInteger secs = data as VTInteger;
 			Seconds = secs.Value;
@@ -650,7 +646,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("sec"), new VTInteger(Seconds));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for CSecsOnSpellGE");
@@ -671,10 +667,9 @@ namespace VTMetaLib.VTank
 			Burden = burden;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file, 
-				file.ReadExpectedData(typeof(CBurdenPercentGE), typeof(VTInteger)) as VTInteger);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(CBurdenPercentGE), typeof(VTInteger)) as VTInteger);
 		}
 
 		public override VTDataType AsVTData()
@@ -682,7 +677,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(Burden);
 		}
 
-        public override void ReadFromData(LineReadable context, VTDataType data)
+        public override void ReadFromData(SeekableCharStream file, VTDataType data)
         {
 			VTInteger burden = data as VTInteger;
 			Burden = burden.Value;
@@ -705,7 +700,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("d"), new VTDouble(Distance));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
@@ -731,7 +726,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(Expr));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CExpr");
@@ -760,7 +755,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("c"), new VTString(ColorIdList));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected only one row but got {table.RowCount} for CDistanceToRouteGE");
@@ -773,7 +768,7 @@ namespace VTMetaLib.VTank
 
 	public static class VTConditionHelpers
     {
-		internal static VTCondition NewCondition(this VTConditionType type, LineReadable file)
+		internal static VTCondition NewCondition(this VTConditionType type, SeekableCharStream file)
 		{
 			switch (type)
 			{

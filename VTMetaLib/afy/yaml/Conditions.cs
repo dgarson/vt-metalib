@@ -88,18 +88,18 @@ namespace VTMetaLib.afy.yaml
 
     public class NotCondition : AfyYamlCondition
     {
-        public AfyCondition Condition { get; set; }
+        public AfyCondition Child { get; set; }
 
         public NotCondition() : base(AfyConditionType.Not) { }
 
         public NotCondition(AfyCondition cond) : this()
         {
-            Condition = cond;
+            Child = cond;
         }
 
         public override VTCondition AsVTCondition(AfyYamlContext context)
         {
-            return new CNot(Condition.AsVTCondition(context: context));
+            return new CNot(Child.AsVTCondition(context: context));
         }
     }
 

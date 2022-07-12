@@ -9,4 +9,8 @@
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="afy\antlr\impl\" />
+  </ItemGroup>
+
 </Project>

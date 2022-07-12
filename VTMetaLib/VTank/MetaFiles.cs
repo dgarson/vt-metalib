@@ -19,11 +19,12 @@ namespace VTMetaLib.VTank
     {
         public static VTMeta LoadMetaFile(string path)
         {
-            List<string> lines = ReadAllLines(path);
-            MetaFile file = new MetaFile(MetaFileType.MetaFile, path, lines);
+            // List<string> lines = ReadAllLines(path);
+            // MetaFile file = new MetaFile(MetaFileType.MetaFile, path, lines);
+            SeekableCharStream reader = SeekableCharStream.FromFile(path);
 
             VTMeta meta = new VTMeta();
-            meta.ReadFrom(file);
+            meta.ReadFrom(reader);
             return meta;
         }
 
@@ -56,7 +57,7 @@ namespace VTMetaLib.VTank
         }
     }
 
-    public class MetaFile : LineReadable
+    public class MetaFile
     {
 
         /// <summary>
@@ -64,7 +65,24 @@ namespace VTMetaLib.VTank
         /// </summary>
         public string Path { get; private set; }
 
-        public override List<string> Lines { get; } = new List<string>();
+        public string Name { get; private set; }
+
+        private List<string> writtenLines;
+
+        public List<string> Lines
+        {
+            get
+            {
+                if (Reader != null)
+                    return Reader.Lines;
+                else if (writtenLines == null)
+                    writtenLines = new List<string>();
+                return writtenLines;
+            }
+        }
+
+
+        public SeekableCharStream Reader { get; private set; }
 
         public bool HasPath
         {
@@ -93,9 +111,19 @@ namespace VTMetaLib.VTank
             using (StreamWriter writer = new StreamWriter(Path, false))
             {
                 // simply write the current FileLines to the target path
-                writer.Write(ToString());
+                writer.Write(string.Join("\r\n", writtenLines));
             }
             Loggers.WriterLog.Info($"Finished writing meta file: {Path}");
+        }
+
+        public void Error(string msg)
+        {
+            Loggers.WriterLog.Error(msg);
+        }
+
+        public void Debug(string msg)
+        {
+            Loggers.WriterLog.Debug(msg);
         }
 
         /// <summary>
@@ -103,7 +131,7 @@ namespace VTMetaLib.VTank
         /// included, otherwise this will just return the meta name (in-memory building of metas?)
         /// </summary>
         /// <returns></returns>
-        public override string GetSourceText()
+        public string GetSourceText()
         {
             return HasPath ? $"{Name} ({Path})" : Name;
         }
@@ -120,6 +148,9 @@ namespace VTMetaLib.VTank
             Path = string.IsNullOrEmpty(path) ? name : path;
             if (lines != null)
                 Lines.AddRange(lines);
+
+            if (FileExists && lines == null)
+                Reader = SeekableCharStream.FromFile(Path);
         }
 
         public static string GetNameFromPath(string path)

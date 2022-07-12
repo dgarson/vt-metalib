@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
@@ -36,17 +37,19 @@ namespace VTMetaLib.VTank
 		
 		public static VTRule ReadRule(this MetaFile file)
         {
+			SeekableCharStream reader = file.Reader;
+
 			// TODO validate ID values exist ...
-			VTConditionType condType = (VTConditionType)file.ReadVTInteger().Value;
-			VTActionType actionType = (VTActionType)file.ReadVTInteger().Value;
+			VTConditionType condType = (VTConditionType)reader.ReadVTInteger().Value;
+			VTActionType actionType = (VTActionType)reader.ReadVTInteger().Value;
 
-			VTCondition condition = condType.NewCondition(file);
-			condition.ReadDataFrom(file);
+			VTCondition condition = condType.NewCondition(reader);
+			condition.ReadDataFrom(reader: reader);
 
-			VTAction action = actionType.NewAction(file);
-			action.ReadDataFrom(file);
+			VTAction action = actionType.NewAction(reader);
+			action.ReadDataFrom(reader: reader);
 
-			VTString stateName = file.ReadVTString();
+			VTString stateName = reader.ReadVTString();
 			return new VTRule(stateName.Value, condition, action);
         }
 	

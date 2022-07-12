@@ -24,23 +24,23 @@ namespace VTMetaLib.afy.IO
 {
     public class AfyReader : IDisposable
     {
-        private readonly LineReadable lines;
-        private readonly TextReader textReader;
+        private readonly SeekableCharStream lines;
 
         private readonly IDeserializer yamlDeserializer;
         private bool disposed;
-
-        public AfyReader(TextReader textReader)
+        
+        private AfyReader(SeekableCharStream reader)
         {
-            this.textReader = textReader;
-            this.lines = InMemoryLines.ReadAllFrom(textReader);
+            this.lines = reader;
 
             yamlDeserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
         }
 
-        public AfyReader(string contents) : this(new StringReader(contents)) { }
+        public AfyReader(Stream stream) : this(SeekableCharStream.FromStream(stream)) { }
+
+        public AfyReader(string contents) : this(SeekableCharStream.FromText(contents)) { }
 
         public string GetContextLines()
         {
@@ -53,8 +53,9 @@ namespace VTMetaLib.afy.IO
             if (!disposed)
             {
                 disposed = true;
+                /*
                 if (textReader != null)
-                    textReader.Dispose();
+                    textReader.Dispose();*/
             }
         }
     }

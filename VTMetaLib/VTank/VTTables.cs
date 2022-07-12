@@ -133,7 +133,7 @@ namespace VTMetaLib.VTank
             return String.Join(";", values.ToArray());
         }
 
-        internal override void ReadFrom(LineReadable file)
+        internal override void ReadFrom(SeekableCharStream file)
         {
             Name = file.ReadNextLineAsString();
             int colCount = file.ReadNextLineAsInt();

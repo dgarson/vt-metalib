@@ -16,6 +16,8 @@ namespace VTMetaLib.VTank
             }
         }
 
+        public SeekableCharStream Reader { get => File.Reader; }
+
         public MetaContext MetaContext
         {
             get {
@@ -37,7 +39,7 @@ namespace VTMetaLib.VTank
 
         public string ReadNextLine(Type dtType, string reason)
         {
-            string line = File.ReadNextLine();
+            string line = Reader.ReadNextLineAsString();
             if (line == null)
                 throw MalformedFor($"No lines remaining to read for type {dtType.Name}: {reason}");
             return line;
@@ -45,10 +47,10 @@ namespace VTMetaLib.VTank
 
         public char ReadNextChar(Type dtType, string reason)
         {
-            char ch = File.ReadNextChar();
-            if (ch == (char)0)
-                throw MalformedFor($"Unable to read another character for type {dtType.Name}: {reason}");
-            return ch;
+            if (Reader.NextChar(out char ch) && ch != (char)0)
+                return ch;
+
+            throw MalformedFor($"Unable to read another character for type {dtType.Name}: {reason}");
         }
 
         public VTDouble ReadDouble()
@@ -122,8 +124,11 @@ namespace VTMetaLib.VTank
         public VTByteArray ReadByteArray()
         {
             int count = ReadAndParseInt(typeof(VTByteArray), "byte count");
-            /* string fullLine = */ ReadNextLine(typeof(VTByteArray), "byte array data");
-            String bytes = File.ReadNextChars(count);
+            string bytes = Reader.ConsumeChars(count, true);
+            if (bytes.Length != count)
+            {
+                throw MalformedFor($"Expected {count} bytes to be read for bytearray (ba) but only read {bytes.Length}");
+            }
             return new VTByteArray(bytes);
         }
 
@@ -225,10 +230,7 @@ namespace VTMetaLib.VTank
 
         public string CurrentLine
         {
-            get
-            {
-                return File.GetCurrentLineOrNull();
-            }
+            get => File.Reader.CurrentLine.Length > 0 ? File.Reader.CurrentLine : null;
         }
     }
     public class ReadingForType : IDisposable
@@ -249,28 +251,28 @@ namespace VTMetaLib.VTank
 
     public static class VTMetaReaderExtensions
     {
-        public static MalformedMetaException MalformedFor(this LineReadable file, string message)
+        public static MalformedMetaException MalformedFor(this SeekableCharStream file, string message)
         {
             return new MalformedMetaException(file, message);
         }
 
-        public static string ReadNextLine(this LineReadable file, Type dtType, string reason)
+        public static string ReadNextLine(this SeekableCharStream file, Type dtType, string reason, bool skipLeadingLF = false)
         {
-            string line = file.ReadNextLine();
+            string line = file.ReadNextRequiredLine(reason);
             if (line == null)
                 throw file.MalformedFor($"No lines remaining to read for type {dtType.Name}: {reason}");
             return line;
         }
 
-        public static char ReadNextChar(this LineReadable file, Type dtType, string reason)
+        public static char ReadNextChar(this SeekableCharStream file, Type dtType, string reason)
         {
-            char ch = file.ReadNextChar();
-            if (ch == (char)0)
+            char ch;
+            if (!file.NextChar(out ch) || ch == default(char)) 
                 throw file.MalformedFor($"Unable to read another character for type {dtType.Name}: {reason}");
             return ch;
         }
 
-        public static VTDouble ReadVTDouble(this LineReadable file)
+        public static VTDouble ReadVTDouble(this SeekableCharStream file)
         {
             string line = file.ReadNextLine(typeof(VTDouble), "double");
             double value;
@@ -284,7 +286,7 @@ namespace VTMetaLib.VTank
             return new VTDouble(value);
         }
 
-        public static VTFloat ReadVTFloat(this LineReadable file)
+        public static VTFloat ReadVTFloat(this SeekableCharStream file)
         {
             string line = file.ReadNextLine(typeof(VTDouble), "float");
             float value;
@@ -293,12 +295,12 @@ namespace VTMetaLib.VTank
             return new VTFloat(value);
         }
 
-        public static VTInteger ReadVTInteger(this LineReadable file)
+        public static VTInteger ReadVTInteger(this SeekableCharStream file)
         {
             return new VTInteger(file.ReadAndParseInt(typeof(VTInteger), "int"));
         }
 
-        internal static int ReadAndParseInt(this LineReadable file, Type dtType, string reason)
+        internal static int ReadAndParseInt(this SeekableCharStream file, Type dtType, string reason)
         {
             string line = file.ReadNextLine(dtType, "int");
             int value;
@@ -307,7 +309,7 @@ namespace VTMetaLib.VTank
             return value;
         }
 
-        public static VTUnsignedInteger ReadVTUnsignedInt(this LineReadable file)
+        public static VTUnsignedInteger ReadVTUnsignedInt(this SeekableCharStream file)
         {
             string line = file.ReadNextLine(typeof(VTUnsignedInteger), "uint");
             uint value;
@@ -316,12 +318,12 @@ namespace VTMetaLib.VTank
             return new VTUnsignedInteger(value);
         }
 
-        public static VTBoolean ReadVTBoolean(this LineReadable file)
+        public static VTBoolean ReadVTBoolean(this SeekableCharStream file)
         {
             return new VTBoolean(file.ReadAndParseBool(typeof(VTBoolean), "boolean"));
         }
 
-        internal static bool ReadAndParseBool(this LineReadable file, Type dtType, string reason)
+        internal static bool ReadAndParseBool(this SeekableCharStream file, Type dtType, string reason)
         {
             string line = file.ReadNextLine(dtType, "bool");
             if (line == "True" || line == "y")
@@ -332,13 +334,13 @@ namespace VTMetaLib.VTank
                 throw file.MalformedFor($"Unable to parse boolean value from {line} for {reason}");
         }
 
-        public static VTString ReadVTString(this LineReadable file)
+        public static VTString ReadVTString(this SeekableCharStream file)
         {
-            string line = file.ReadNextLine(typeof(VTString), "string");
+            string line = file.ReadNextLineAsString(); // file.ReadNextLine(typeof(VTString), "string");
             return new VTString(line);
         }
 
-        public static VTByteArray ReadVTByteArray(this LineReadable file)
+        public static VTByteArray ReadVTByteArray(this SeekableCharStream file)
         {
             VTByteArray ba = new VTByteArray();
             ba.ReadFrom(file);
@@ -352,14 +354,14 @@ namespace VTMetaLib.VTank
             return ba;
         }
 
-        internal static VTDataType ReadTypedData(this LineReadable file, Type parentType)
+        internal static VTDataType ReadTypedData(this SeekableCharStream file, Type parentType, bool isRule = false)
         {
             string typeStr = file.ReadNextLine(parentType, $"data type for record in {parentType.Name}");
             switch (typeStr)
             {
-                // table type (unnamed)
+                // table type (cunnamed)
                 case "TABLE":
-                    return file.ReadVTTable(parentType.Name, "TABLE");
+                    return file.ReadVTTable(parentType.Name, isRule, "TABLE");
                 // integer type
                 case "i":
                     return file.ReadVTInteger();
@@ -388,7 +390,7 @@ namespace VTMetaLib.VTank
             throw file.MalformedFor($"Invalid data type string '{typeStr}'");
         }
 
-        public static VTTable ReadVTTable(this LineReadable file, string tablePurpose = "", string name = null)
+        public static VTTable ReadVTTable(this SeekableCharStream file, string name = null, bool isRule = false, string tablePurpose = "")
         {
             // DO NOT READ ANOTHER LINE FOR THE NAME IF IT WAS ALREADY READ!
             string tableName = string.IsNullOrEmpty(name) ? file.ReadNextRequiredLine($"tableName for {tablePurpose}") : name;
@@ -415,10 +417,11 @@ namespace VTMetaLib.VTank
 
 
             // BODY
+            bool isRecordRule = VTMetaConstants.SYNTHETIC_META_TABLE_TYPE_NAME.Equals(name);
             int recordCount = file.ReadAndParseInt(typeof(VTTable), $"recordCount of {tableName} for {tablePurpose}");
             for (int i = 0; i < recordCount; i++)
             {
-                VTTableRow record = file.ReadVTTableRecord(table, i);
+                VTTableRow record = file.ReadVTTableRecord(table, i, isRecordRule);
                 table.Rows.Add(record);
             }
 
@@ -426,24 +429,32 @@ namespace VTMetaLib.VTank
             return table;
         }
 
-        internal static VTTableRow ReadVTTableRecord(this LineReadable file, VTTable table, int recordNum)
+        internal static VTTableRow ReadVTTableRecord(this SeekableCharStream file, VTTable table, int recordNum, bool isRule)
         {
             VTTableRow row = new VTTableRow(table);
-            for (int i = 0; i < table.ColumnCount; i++)
+            // check to see if it is a top-level rule since the 5th column is the State string, no key is present for key-value pairs in table
+            // int lastCol = isRule ? table.ColumnCount - 1 : table.ColumnCount;
+            int lastCol = table.ColumnCount;
+            for (int i = 0; i < lastCol; i++)
             {
 
                 // TODO: wrap this in another try-catch to bubble up additional contextual information about where in meta
                 //      processing we are!
-                VTDataType data = file.ReadTypedData(typeof(VTTable));
+                VTDataType data = file.ReadTypedData(typeof(VTTable), isRule);
 
                 row[table.ColumnNames[i]] = data;
+            }
+            if (lastCol < table.ColumnCount)
+            {
+                string stateName = file.ReadNextLineAsString();
+                row[lastCol] = new VTString(stateName);
             }
 
             // finished reading every column
             return row;
         }
-
-        public static VTDataType ReadExpectedData(this LineReadable file, Type parentType, Type expectedType)
+        
+        public static VTDataType ReadExpectedData(this SeekableCharStream file, Type parentType, Type expectedType)
         {
             VTDataType data = file.ReadTypedData(parentType);
             if (data.GetType() != expectedType)
@@ -451,14 +462,14 @@ namespace VTMetaLib.VTank
             return data;
         }
 
-        public static void VerifyExpectedData(this LineReadable file, Type parentType, VTDataType val, object expected)
+        public static void VerifyExpectedData(this SeekableCharStream file, Type parentType, VTDataType val, object expected)
         {
             var dtVal = val.GetValue();
             if (!Object.Equals(dtVal, expected))
                 throw file.MalformedFor($"{parentType.Name}: Expected to get value {expected} but got value: {dtVal}");
         }
 
-        public static VTTable ReadSpecialTableWithExpectedColumns(this LineReadable file, string tablePurpose, List<string> colNames)
+        public static VTTable ReadSpecialTableWithExpectedColumns(this SeekableCharStream file, string tablePurpose, List<string> colNames)
         {
             VTTable table = file.ReadVTTable();
             if (table.ColumnNames.Count != colNames.Count)

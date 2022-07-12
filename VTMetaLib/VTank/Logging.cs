@@ -27,7 +27,7 @@ namespace VTMetaLib.VTank
 
         public static ILog Log = LogManager.GetLogger("VTank.Log");
 
-        public static void Info(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Info(this SeekableCharStream context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -36,7 +36,7 @@ namespace VTMetaLib.VTank
                 Log.Info(formatted);
         }
 
-        public static void Warn(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Warn(this SeekableCharStream context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -45,7 +45,7 @@ namespace VTMetaLib.VTank
                 Log.Warn(formatted);
         }
 
-        public static void Error(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Error(this SeekableCharStream context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -54,7 +54,7 @@ namespace VTMetaLib.VTank
                 Log.Error(formatted);
         }
 
-        public static void Debug(this LineReadable context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
+        public static void Debug(this SeekableCharStream context, string message, ContextInformation contextInfo = ContextInformation.None, Exception exc = null)
         {
             string formatted = FormatMessageForContext(context, message, contextInfo);
             if (exc != null)
@@ -63,16 +63,17 @@ namespace VTMetaLib.VTank
                 Log.Debug(formatted);
         }
 
-        internal static string FormatMessageForContext(this LineReadable file, string message, ContextInformation contextInfo)
+        internal static string FormatMessageForContext(this SeekableCharStream file, string message, ContextInformation contextInfo)
         {
             if (contextInfo == ContextInformation.None)
                 return message;
 
-            StringBuilder msg = new StringBuilder($"{file.GetSourceText()} (line #{file.LineNumber}");
+            // StringBuilder msg = new StringBuilder($"{file.GetSourceText()} (line #{file.LineNumber}");
+            StringBuilder msg = new StringBuilder($"(on Line #{file.LineNumber}");
             if (file.Column > 0)
                 msg.Append($", column #{file.Column})");
             else
-                msg.Append(")");
+                msg.Append(')');
 
             if (contextInfo == ContextInformation.SourceLocation)
             {
@@ -84,21 +85,16 @@ namespace VTMetaLib.VTank
 
             if (contextInfo == ContextInformation.CurrentLine)
             {
-                msg.Append($" at: \"{file.GetCurrentLineOrNull()}\"");
+                msg.Append($" at: \"{file.CurrentLine}\"");
                 return msg.ToString();
             }
 
 
-            // Include all surrounding lines (up to 4 before and up to 4 after)
-            List<string> lines = file.GetCurrentLineWithContext(4, 2, true, 4);
-            if (lines.Count == 1)
-                msg.Append($"\"{lines[0]}\"");
-            else
-            {
-                foreach (var line in lines)
-                    msg.Append($"{line}\n");
-            }
-
+            // include up to 4 preceding lines for context
+            List<string> prevLines = file.GetPreviousLines(4);
+            foreach (var line in prevLines)
+                msg.Append($"{line}\n");
+            msg.Append($"\"{file.CurrentLine}\"");
             return msg.ToString();
         }
     }

@@ -186,7 +186,7 @@ namespace VTMetaLib.MIMB
             string line;
             while ((line = reader.ReadLine()) != null)
                 lines.Add(line);
-            InMemoryLines readable = new InMemoryLines(lines);
+            InMemorySeekableCharStream readable = new InMemorySeekableCharStream(lines);
 
             XmlSerializer serializer = new XmlSerializer(typeof(MimbXmlFile));
             StringReader strReader = new StringReader(string.Join("\n", lines));
@@ -199,7 +199,7 @@ namespace VTMetaLib.MIMB
 
     public static class MimbXmlFileExtensions
     {
-        public static VTMeta ReadVTankMetaFromMimbXml(this LineReadable readable, MimbFile mimbXml)
+        public static VTMeta ReadVTankMetaFromMimbXml(this SeekableCharStream readable, MimbFile mimbXml)
         {
             VTMeta meta = new VTMeta();
             foreach (MimbRule mimbRule in mimbXml.rules)
@@ -212,7 +212,7 @@ namespace VTMetaLib.MIMB
             return meta;
         }
 
-        public static VTRule ReadVTRuleFromMimb(this LineReadable readable, MimbRule mimbRule)
+        public static VTRule ReadVTRuleFromMimb(this SeekableCharStream readable, MimbRule mimbRule)
         {
             VTCondition condition = readable.ParseMimbCondition(mimbRule.CondData, (MimbConditionType)Enum.Parse(typeof(MimbConditionType), mimbRule.CondType));
             VTAction action = readable.ParseMimbAction(mimbRule.ActData, (MimbActionType)Enum.Parse(typeof(MimbActionType), mimbRule.ActType));
@@ -220,7 +220,7 @@ namespace VTMetaLib.MIMB
             return rule;
         }
 
-        public static VTCondition ParseMimbCondition(this LineReadable readable, string data, MimbConditionType condType = MimbConditionType.Unassigned)
+        public static VTCondition ParseMimbCondition(this SeekableCharStream readable, string data, MimbConditionType condType = MimbConditionType.Unassigned)
         {
             string condData = data;
             if (condType == MimbConditionType.Unassigned) { 
@@ -379,7 +379,7 @@ namespace VTMetaLib.MIMB
             return cond;
         }
 
-        public static VTAction ParseMimbAction(this LineReadable readable, string data, MimbActionType actionType = MimbActionType.Unassigned)
+        public static VTAction ParseMimbAction(this SeekableCharStream readable, string data, MimbActionType actionType = MimbActionType.Unassigned)
         {
             string actionData = data;
             if (actionType == MimbActionType.Unassigned)
@@ -494,7 +494,7 @@ namespace VTMetaLib.MIMB
             return action;
         }
 
-        public static int ParseInt(this LineReadable readable, string str)
+        public static int ParseInt(this SeekableCharStream readable, string str)
         {
             int val;
             if (int.TryParse(str, out val))
@@ -509,7 +509,7 @@ namespace VTMetaLib.MIMB
             }
         }
 
-        public static double ParseDouble(this LineReadable readable, string str)
+        public static double ParseDouble(this SeekableCharStream readable, string str)
         {
             double val;
             if (!double.TryParse(str, out val))
@@ -517,7 +517,7 @@ namespace VTMetaLib.MIMB
             return val;
         }
 
-        private static List<VTCondition> SplitAndParseConditions(this LineReadable readable, string data)
+        private static List<VTCondition> SplitAndParseConditions(this SeekableCharStream readable, string data)
         {
             List<string> tokens = MimbDataTokenizer.GetAllTokens(data);
             List<VTCondition> conds = new List<VTCondition>();
