@@ -9,7 +9,7 @@ namespace VTMetaLib.VTank
 {
     public static class VTMetaConstants
     {
-        public const string SYNTHETIC_META_TABLE_TYPE_NAME = "meta";
+        public const string META_TABLE_NAME = "CondAct";
     }
 
     public class VTMeta : VTEncodable
@@ -58,21 +58,20 @@ namespace VTMetaLib.VTank
 
         public void ReadDataFrom(SeekableCharStream reader)
         {
-            int tableCount = reader.ReadAndParseInt(typeof(VTMeta), "meta tableCount");
-            if (tableCount != 1)
-                throw reader.MalformedFor($"Expected top-level tableCount to be 1 (one meta) but got {tableCount}");
+            int startLineNum = reader.LineNumber;
+            VTTableList tableList = reader.ReadVTTableList();
+            if (tableList.Count != 1)
+                throw reader.MalformedFor($"Expected top-level tableCount to be 1 (one meta) but got {tableList.Count}");
 
-            string tableName = reader.ReadNextLine(typeof(VTMeta), "meta tableName");
-            VTTable table = reader.ReadVTTable(VTMetaConstants.SYNTHETIC_META_TABLE_TYPE_NAME, false, tableName);
-            ReadFromData(file: reader, table);
+            VTTable ruleTable = tableList[0];
+            LineCount = reader.LineNumber - startLineNum;
+            ReadFromData(reader, ruleTable);
 
-            LineCount = reader.Lines.Count;
+            if (ruleTable.Name != "CondAct")
+                throw reader.MalformedFor($"Expected table name for Meta to be 'CondAct' but got: '{ruleTable.Name}'");
         }
 
-        public void ReadFrom(SeekableCharStream reader)
-        {
-            ReadDataFrom(reader: reader);
-        }
+        public void ReadFrom(SeekableCharStream reader) => ReadDataFrom(reader);
 
         public void ReadFromData(SeekableCharStream file, VTDataType data)
         {
@@ -133,8 +132,9 @@ namespace VTMetaLib.VTank
 
         public void WriteTo(MetaFileBuilder writer)
         {
-            writer.WriteLine("1");
-            writer.WriteData(AsVTData());
+            VTTableList tableList = new VTTableList();
+            tableList.AddTable(AsVTData() as VTTable);
+            tableList.WriteTo(writer);
         }
     }
 }

@@ -267,7 +267,7 @@ namespace VTMetaLib.VTank
         public static char ReadNextChar(this SeekableCharStream file, Type dtType, string reason)
         {
             char ch;
-            if (!file.NextChar(out ch) || ch == default(char)) 
+            if (!file.NextChar(out ch) || ch == default(char))
                 throw file.MalformedFor($"Unable to read another character for type {dtType.Name}: {reason}");
             return ch;
         }
@@ -390,6 +390,13 @@ namespace VTMetaLib.VTank
             throw file.MalformedFor($"Invalid data type string '{typeStr}'");
         }
 
+        public static VTTableList ReadVTTableList(this SeekableCharStream file)
+        {
+            VTTableList tableList = new VTTableList();
+            tableList.ReadFrom(file);
+            return tableList;
+        }
+
         public static VTTable ReadVTTable(this SeekableCharStream file, string name = null, bool isRule = false, string tablePurpose = "")
         {
             // DO NOT READ ANOTHER LINE FOR THE NAME IF IT WAS ALREADY READ!
@@ -417,7 +424,7 @@ namespace VTMetaLib.VTank
 
 
             // BODY
-            bool isRecordRule = VTMetaConstants.SYNTHETIC_META_TABLE_TYPE_NAME.Equals(name);
+            bool isRecordRule = VTMetaConstants.META_TABLE_NAME.Equals(name);
             int recordCount = file.ReadAndParseInt(typeof(VTTable), $"recordCount of {tableName} for {tablePurpose}");
             for (int i = 0; i < recordCount; i++)
             {

@@ -35,10 +35,8 @@ namespace VTMetaLib.VTank
 	public static class MetaReaderExtensions
     {
 		
-		public static VTRule ReadRule(this MetaFile file)
+		public static VTRule ReadRule(this SeekableCharStream reader)
         {
-			SeekableCharStream reader = file.Reader;
-
 			// TODO validate ID values exist ...
 			VTConditionType condType = (VTConditionType)reader.ReadVTInteger().Value;
 			VTActionType actionType = (VTActionType)reader.ReadVTInteger().Value;

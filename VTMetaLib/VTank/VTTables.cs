@@ -9,6 +9,64 @@ using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
+    public class VTTableList : VTDataType
+    {
+
+        public List<VTTable> Tables { get; private set; } = new List<VTTable>();
+
+        public VTTableList() : base("TABLELIST", "notused") { }
+
+        public VTTableList(List<VTTable> tables) : this()
+        {
+            Tables.AddRange(tables);
+        }
+
+        public void AddTable(VTTable table)
+        {
+            Tables.Add(table);
+        }
+
+        public int Count { get => Tables.Count; }
+
+        public VTTable this[int index] { get => Tables[index]; }
+
+        public override object GetValue()
+        {
+            return Tables;
+        }
+
+        public override string GetValueAsString()
+        {
+            return "[[TABLELIST]]";
+        }
+
+        public override void SetValueFromString(string strValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override void ReadFrom(SeekableCharStream file)
+        {
+            int count = file.ReadNextLineAsInt();
+            for (int i = 0; i < count; i++)
+            {
+                VTTable table = new VTTable();
+                table.ReadFrom(file);
+                Tables.Add(table);
+            }
+        }
+
+        internal override void WriteTo(MetaFileBuilder writer)
+        {
+            writer.WriteLine(Count.ToString());
+            for (int i = 0; i < Tables.Count; i++)
+            {
+                VTTable table = Tables[i];
+                table.WriteTo(writer);
+            }
+        }
+    }
+
     public class VTTable : VTDataType
     {
 
