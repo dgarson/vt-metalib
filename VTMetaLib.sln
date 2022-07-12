@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VTMetaLib", "VTMetaLib\VTMetaLib.csproj", "{E8F84AA4-7012-4A4D-A54C-60B16F81F019}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VTMetaLib", "VTMetaLib\VTMetaLib.csproj", "{E8F84AA4-7012-4A4D-A54C-60B16F81F019}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vtm", "vtm\vtm.csproj", "{1BDF478D-E97E-46DD-A3C6-170AA1F12086}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{E8F84AA4-7012-4A4D-A54C-60B16F81F019}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8F84AA4-7012-4A4D-A54C-60B16F81F019}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8F84AA4-7012-4A4D-A54C-60B16F81F019}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BDF478D-E97E-46DD-A3C6-170AA1F12086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BDF478D-E97E-46DD-A3C6-170AA1F12086}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BDF478D-E97E-46DD-A3C6-170AA1F12086}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BDF478D-E97E-46DD-A3C6-170AA1F12086}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

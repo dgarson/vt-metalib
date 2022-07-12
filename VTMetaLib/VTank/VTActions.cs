@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
@@ -59,8 +60,8 @@ namespace VTMetaLib.VTank
 		}
 
 		public abstract VTDataType AsVTData();
-		public abstract void ReadDataFrom(LineReadable reader);
-		public abstract void ReadFromData(LineReadable file, VTDataType data);
+		public abstract void ReadDataFrom(SeekableCharStream reader);
+		public abstract void ReadFromData(SeekableCharStream file, VTDataType data);
 
 		public virtual void WriteTo(MetaFileBuilder writer)
         {
@@ -81,8 +82,8 @@ namespace VTMetaLib.VTank
 	{
 		public AUnassigned() : base(VTActionType.Unassigned) { }
 
-		public override void ReadDataFrom(LineReadable file)
-		{
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
 			throw file.MalformedFor("AUnassigned not supported");
 		}
 
@@ -91,7 +92,7 @@ namespace VTMetaLib.VTank
 			return new VTInteger(0);
 		}
 
-		public override void ReadFromData(LineReadable file, VTDataType data)
+		public override void ReadFromData(SeekableCharStream file, VTDataType data)
 		{
 			throw file.MalformedFor("AUnassigned not supported");
 		}
@@ -99,6 +100,7 @@ namespace VTMetaLib.VTank
 
 	public class ANone : VTActionWithZeroData
 	{
+		public static readonly ANone Instance = new ANone();
 		public ANone() : base(VTActionType.None) { }
 	}
 
@@ -113,9 +115,9 @@ namespace VTMetaLib.VTank
 			State = state;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file, file.ReadExpectedData(typeof(ASetState), typeof(VTString)) as VTString);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(ASetState), typeof(VTString)) as VTString);
 		}
 
 		public override VTDataType AsVTData()
@@ -123,7 +125,7 @@ namespace VTMetaLib.VTank
 			return new VTString(State);
 		}
 
-		public override void ReadFromData(LineReadable file, VTDataType data)
+		public override void ReadFromData(SeekableCharStream file, VTDataType data)
 		{
 			VTString val = data as VTString;
 			State = val.Value;
@@ -141,10 +143,9 @@ namespace VTMetaLib.VTank
 			Message = message;
 		}
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file,
-				file.ReadExpectedData(typeof(AChatCommand), typeof(VTString)) as VTString);
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(AChatCommand), typeof(VTString)) as VTString);
 		}
 
 		public override VTDataType AsVTData()
@@ -152,7 +153,7 @@ namespace VTMetaLib.VTank
 			return new VTString(Message);
 		}
 
-		public override void ReadFromData(LineReadable file, VTDataType data)
+		public override void ReadFromData(SeekableCharStream file, VTDataType data)
 		{
 			VTString val = data as VTString;
 			Message = val.Value;
@@ -176,14 +177,14 @@ namespace VTMetaLib.VTank
 				table.AddTwoColRow(new VTInteger(child.TypeId), child.AsVTData());
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			foreach (VTTableRow row in table.Rows)
 			{
 				VTInteger atypeVal = row["K"] as VTInteger;
 				VTActionType actionType = (VTActionType)atypeVal.Value;
 				VTAction action = actionType.NewAction(file);
-				action.ReadFromData(file, row["V"]);
+				action.ReadFromData(file: file, row["V"]);
 
 				Actions.Add(action);
 			}
@@ -197,6 +198,11 @@ namespace VTMetaLib.VTank
 		public VTNavRoute NavRoute { get; internal set; }
 
 		internal AEmbedNav() : base(VTActionType.EmbedNav) { }
+
+		internal AEmbedNav(VTNavRoute navRoute) : this()
+        {
+			NavRoute = navRoute;
+        }
 
 		public AEmbedNav(byte[] bytes) : this()
 		{
@@ -224,9 +230,13 @@ namespace VTMetaLib.VTank
             }
 			Bytes = bytes;
 			List<string> lines = Bytes.Replace("\r\n", "\n").Split("\n").ToList<string>();
+			string name = "[None]";
 			if (isEmbedded)
-				lines.RemoveRange(0, 2);
-			NavRoute = NavRoutes.LoadNavRoute(new InMemoryLines(lines));
+			{
+				name = lines[0];
+				lines.RemoveRange(0, 3);
+			}
+			NavRoute = NavRoutes.LoadNavRoute(SeekableCharStream.FromLines(lines), isEmbedded);
 		}
 
 		internal string GetData()
@@ -239,13 +249,12 @@ namespace VTMetaLib.VTank
 			return builder.ToString();
         }
 
-		public override void ReadDataFrom(LineReadable file)
-		{
-			ReadFromData(file,
-				file.ReadExpectedData(typeof(AEmbedNav), typeof(VTByteArray)));
+		public override void ReadDataFrom(SeekableCharStream file)
+        {
+			ReadFromData(file: file, file.ReadExpectedData(typeof(AEmbedNav), typeof(VTByteArray)));
 		}
 
-		public override void ReadFromData(LineReadable file, VTDataType data)
+		public override void ReadFromData(SeekableCharStream file, VTDataType data)
 		{
 			VTByteArray byteArray = data as VTByteArray;
 			SetData(byteArray.Value);
@@ -284,7 +293,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("ret"), new VTString(ReturnToStateName));
 		}
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ACallState");
@@ -296,6 +305,8 @@ namespace VTMetaLib.VTank
 
 	public class AReturn : VTActionWithZeroData
 	{
+		public static readonly AReturn Instance = new AReturn();
+
 		public AReturn() : base(VTActionType.Return) { }
 	}
 
@@ -315,7 +326,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(Expression));
         }
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for AExprAction");
@@ -339,7 +350,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("e"), new VTString(ChatExpression));
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for AChatExpr");
@@ -371,7 +382,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("t"), new VTDouble(Seconds));
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 3)
 				throw file.MalformedFor($"Expected 3 rows but got {table.RowCount} for ASetWatchdog");
@@ -384,11 +395,13 @@ namespace VTMetaLib.VTank
 
 	public class AClearWatchdog : VTActionWithTableData
     {
+		public static readonly AClearWatchdog Instance = new AClearWatchdog();
+
 		public AClearWatchdog() : base(VTActionType.ClearWatchdog, TableTypeConstants.SCHEMA_kv) { }
 
         protected override void PopulateTable(VTTable table) { }
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 0)
 				throw file.MalformedFor($"Expected zero rows but got {table.RowCount} for AClearWatchdog");
@@ -415,7 +428,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("v"), new VTString(VarName));
         }
 
-        protected override void ReadFromTable(LineReadable file, VTTable table)
+        protected override void ReadFromTable(SeekableCharStream file, VTTable table)
         {
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for AGetOpt");
@@ -445,7 +458,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("v"), new VTString(Expression));
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ASetOpt");
@@ -475,7 +488,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("x"), new VTByteArray(XmlBytes));
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 2)
 				throw file.MalformedFor($"Expected 2 rows but got {table.RowCount} for ACreateView");
@@ -501,7 +514,7 @@ namespace VTMetaLib.VTank
 			table.AddTwoColRow(new VTString("n"), new VTString(ViewName));
 		}
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 1)
 				throw file.MalformedFor($"Expected only 1 row but got {table.RowCount} for ADestroyView");
@@ -512,11 +525,13 @@ namespace VTMetaLib.VTank
 
 	public class ADestroyAllViews : VTActionWithTableData
 	{
+		public static readonly ADestroyAllViews Instance = new ADestroyAllViews();
+
 		public ADestroyAllViews() : base(VTActionType.DestroyAllViews, TableTypeConstants.SCHEMA_kv) { }
 
 		protected override void PopulateTable(VTTable table) { }
 
-		protected override void ReadFromTable(LineReadable file, VTTable table)
+		protected override void ReadFromTable(SeekableCharStream file, VTTable table)
 		{
 			if (table.RowCount != 0)
 				throw file.MalformedFor($"Expected zero rows but got {table.RowCount} for ADestroyAllViews");
@@ -525,27 +540,27 @@ namespace VTMetaLib.VTank
 
 	public static class VTActionTypeExtensions
 	{
-		internal static VTAction NewAction(this VTActionType type, LineReadable file)
+		internal static VTAction NewAction(this VTActionType type, SeekableCharStream file)
 		{
 			switch (type)
 			{
-				case VTActionType.Unassigned: return new ANone();
-				case VTActionType.None: return new ANone();
+				case VTActionType.Unassigned: throw file.MalformedFor($"Unassigned action id {(int)type} is unsupported");
+				case VTActionType.None: return ANone.Instance;
 				case VTActionType.Expr: return new AExprAction();
 				case VTActionType.SetState: return new ASetState();
 				case VTActionType.ChatCommand: return new AChatCommand();
 				case VTActionType.All: return new AAll();
 				case VTActionType.EmbedNav: return new AEmbedNav();
 				case VTActionType.CallState: return new ACallState();
-				case VTActionType.Return: return new AReturn();
+				case VTActionType.Return: return AReturn.Instance;
 				case VTActionType.ChatExpr: return new AChatExpr();
 				case VTActionType.SetWatchdog: return new ASetWatchdog();
-				case VTActionType.ClearWatchdog: return new AClearWatchdog();
+				case VTActionType.ClearWatchdog: return AClearWatchdog.Instance;
 				case VTActionType.GetOpt: return new AGetOpt();
 				case VTActionType.SetOpt: return new ASetOpt();
 				case VTActionType.CreateView: return new ACreateView();
 				case VTActionType.DestroyView: return new ADestroyView();
-				case VTActionType.DestroyAllViews: return new ADestroyAllViews();
+				case VTActionType.DestroyAllViews: return ADestroyAllViews.Instance;
 				default:
 					throw file.MalformedFor($"No such ATypeID = {type} ({(int)type})");
 			}

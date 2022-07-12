@@ -5,6 +5,7 @@ using System.IO;
 using System.Xml;
 using System.Text;
 using System.Threading.Tasks;
+using VTMetaLib.IO;
 
 namespace VTMetaLib.VTank
 {
@@ -34,7 +35,7 @@ namespace VTMetaLib.VTank
         // TODO: return a more complex type than bool, e.g. something incorporating info about exception/parse error?
         public abstract void SetValueFromString(string strValue);
 
-        internal virtual void ReadFrom(LineReadable file)
+        internal virtual void ReadFrom(SeekableCharStream file)
         {
             string line = file.ReadNextRequiredLine(TypeName);
             SetValueFromString(line);
@@ -355,44 +356,27 @@ namespace VTMetaLib.VTank
             Value = strValue;
         }
 
-        internal override void ReadFrom(LineReadable file)
+        internal override void ReadFrom(SeekableCharStream file)
         {
-            int byteCount = file.ReadNextLineAsInt();
-            StringBuilder sb = new StringBuilder(byteCount);
-            file.ReadNextRequiredLine($"bytearray[{byteCount}]");
-            for (int i = 0; i < byteCount; i++)
+            // int byteCount = file.ReadNextLineAsInt();
+            string nextLine = file.ReadNextRequiredLine("int");
+            int byteCount;
+            if (!int.TryParse(nextLine, out byteCount))
             {
-                char ch = (char)file.ReadNextChar();
-                if (ch == 0)
-                {
-                    // add the line-feed as a byte read
-                    i++;
-                    sb.AppendLine();
-
-                    // read another line if we have more to go...
-                    if (i < byteCount)
-                        file.ReadNextRequiredLine($"bytearray[{byteCount - i}]");
-                    continue;
-                }
-
-                sb.Append(ch);
+                throw file.MalformedFor($"Unable to parse byteCount from non-integer value on Line #{file.LineNumber}: {nextLine}");
             }
-            // file.LineNumber--;
-            string str = sb.ToString();
-            if (str.Length != byteCount)
-                throw new ArgumentException($"Expected to read {byteCount} bytes but have {str.Length} in buffer");
-            if (str.EndsWith("\n"))
-            {
-                file.MovePreviousLine();
+            string contentChars = file.ConsumeChars(byteCount, true);
+            if (contentChars.Length != byteCount) { 
+                throw file.MalformedFor($"Expected to read {byteCount} bytes but read {contentChars.Length} bytes from file!");
             }
-            SetValueFromString(str);
+            Console.WriteLine($"Read string from {byteCount} bytes: {contentChars}");
+            SetValueFromString(contentChars);
         }
 
         internal override void WriteTo(MetaFileBuilder writer)
         {
             writer.WriteLine(GetTypeAsString());
             writer.WriteLine(ByteCount.ToString());
-            // NO TERMINATING LINE FEED!
             writer.WriteString(Value);
         }
     }
